@@ -55,7 +55,7 @@ neuropathy_data[, neuropathy := apply(neuropathy_data[, 4:5], 1, function(x)
   sum(x)) >= 1]
 
 # Recode the two partly missing data to NA's to no neuropathy:
-neuropathy_data[is.na(neuropathy)]$neuropathy <- TRUE
+neuropathy_data[is.na(neuropathy)]$neuropathy <- FALSE
 
 # rename and and save dataset without excess variables:
 names(neuropathy_data)[3] <- "diabetes"
