@@ -1,5 +1,8 @@
+library(dplyr)
 library(data.table)
 library(here)
+library(snakecase)
+
 
 # Read in all the raw csv files in a list, although we only use the data from one of them (the survey data):
 elderly_data_list <-
@@ -28,12 +31,12 @@ neuropathy_data <- survey[, c(1, 2, 32, 11:12)]
 
 # Unfuck column names:
 
-names(neuropathy_data) <- snakecase::to_snake_case(names(neuropathy_data))
+names(neuropathy_data) <- to_snake_case(names(neuropathy_data))
 
 # Recode string data to binary and NAs:
 
 binary_converter_function <- function(x) {
-  dplyr::case_when(
+  case_when(
     x == "N/A" ~ NA,
     x == "YES" | x == "Yes" ~ TRUE,
     x == "NO" ~ FALSE
@@ -60,8 +63,8 @@ neuropathy_data[is.na(neuropathy)]$neuropathy <- FALSE
 # rename and and save dataset without excess variables:
 names(neuropathy_data)[3] <- "diabetes"
 
-
-fwrite(neuropathy_data[, c(1:3, 6)], file = here("output_data", "neuropathy.csv"))
+neuropathy_data_clean <- neuropathy_data[, c(1:3, 6)]
+fwrite(neuropathy_data_clean, file = here("output_data", "neuropathy.csv"))
 
 
 
