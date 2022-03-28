@@ -60,11 +60,13 @@ neuropathy_data[, neuropathy := apply(neuropathy_data[, 4:5], 1, function(x)
 # Recode the two partly missing data to NA's to no neuropathy:
 neuropathy_data[is.na(neuropathy)]$neuropathy <- FALSE
 
-# rename and and save dataset without excess variables:
+# rename and and save dataset without excess variables, on file for each visit, where neuropathy was recorded:
 names(neuropathy_data)[3] <- "diabetes"
 
-neuropathy_data_clean <- neuropathy_data[, c(1:3, 6)]
-fwrite(neuropathy_data_clean, file = here("output_data", "neuropathy.csv"))
+neuropathy_data_visit2 <- neuropathy_data[visit == 2, c(1:3, 6)]
+neuropathy_data_visit8 <- neuropathy_data[visit == 8, c(1:3, 6)]
 
+fwrite(neuropathy_data_visit2, file = here("output_data", "neuropathy_visit_2.csv"))
+fwrite(neuropathy_data_visit8, file = here("output_data", "neuropathy_visit_8.csv"))
 
 
