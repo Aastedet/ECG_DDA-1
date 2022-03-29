@@ -148,10 +148,18 @@ summary(neuropathy_data_visit2[diabetes == T & patient_id %in% ecg_available[ecg
 
 
 
-# This is probably not relevant to us, but there was also considerable loss-to-follow-up:
+## This is probably not relevant to us, but there was also considerable loss-to-follow-up:
+
 # Only 44 of the 77 baseline patients participated in the follow-up screening (visit 8):
 summary(neuropathy_data_visit8)
+# And only 23 of those attending follow-up have a proper ECG available:
+summary(neuropathy_data_visit8[patient_id %in% ecg_available[ecg == 1]$subject_id])
 
+
+# And very few develop neuropathy between visit 2 and visit 8 (only 6 individuals, 3 with diabetes):
+summary(neuropathy_data_visit2[patient_id %in% ecg_available[ecg == 1]$subject_id &
+                                 neuropathy == F &
+                                 patient_id %in% neuropathy_data_visit8[neuropathy == T]$patient_id])
 
 
 # 5. Save the clean neuropathy data sets ----------------------------------
@@ -161,7 +169,8 @@ summary(neuropathy_data_visit8)
 
 # The full data set is saved,
 # in the hope that we're able to use more ECG data than what is described as available in the csv
-# (e.g. maybe we have appropriately formatted data from the 10 second ECGs from visit 1)
+# (e.g. maybe we have appropriately formatted data from the 10 second ECGs from visit 1,
+# or from 24 hour ECGs performed at the follow-up visit)
 
 fwrite(neuropathy_data_visit2, file = here("output_data", "neuropathy_visit_2.csv"))
 fwrite(neuropathy_data_visit8, file = here("output_data", "neuropathy_visit_8.csv"))
