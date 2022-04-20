@@ -487,8 +487,7 @@ nrow(neuropathy_data[diabetes == T, .SD[1], by = patient_id]) # From 138 individ
 # We'll see how much is useful when we open the ECG files.
 
 
-# 5. Summary and save the clean neuropathy datasets ----------------------------------
-
+# 5. Save the clean neuropathy datasets ----------------------------------
 
 fwrite(neuropathy_data, file = here("output_data", "neuropathy_visit_2.csv"))
 fwrite(neuropathy_data_visit8, file = here("output_data", "neuropathy_visit_8.csv"))
