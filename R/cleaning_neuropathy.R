@@ -23,16 +23,16 @@ cded_data <-
 cpd_data <-
   lapply(list.files(here("raw_csv_data", "GE-75"), full.names = T), fread, stringsAsFactors = F)
 
-# From: "Cerebral Vasoregulation in Elderly with Stroke" ("GE-72"):
-# https://www.physionet.org/content/cves/1.0.0/
-cves_data <-
-  fread(list.files(here("raw_csv_data", "GE-72"), full.names = T), stringsAsFactors = F)
 
 # From "Cerebral Vasoregulation in Diabetes" ("GE-71"):
 # https://physionet.org/content/cerebral-vasoreg-diabetes/1.0.0/
 cvd_data <-
   lapply(list.files(here("raw_csv_data", "GE-71"), full.names = T), fread, stringsAsFactors = F)
 
+# From: "Cerebral Vasoregulation in Elderly with Stroke" ("GE-72"):
+# https://www.physionet.org/content/cves/1.0.0/
+cves_data <-
+  fread(list.files(here("raw_csv_data", "GE-72"), full.names = T), stringsAsFactors = F)
 
 
 # 3. Estimate combined population size -------------------------------------------
