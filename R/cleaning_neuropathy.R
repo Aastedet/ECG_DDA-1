@@ -197,7 +197,7 @@ list.files(here("raw_csv_data", "GE-71"), full.names = F)
 # Survey data from "GE-79_Summary_Table-Labs-BP-Ophthalmogic-Walk.csv" for further analysis:
 
 # There are 134 variables, most of them have horrible names:
-names(cded_data[[6]])
+# names(cded_data[[6]])
 
 # Find the diabetes variable and neuropathy:
 names(cded_data[[6]])[grepl("DM",names(cded_data[[6]]))] # "DM PATIENT MEDICAL HISTORY"
@@ -275,7 +275,7 @@ cded_visit8_clean <- cded_survey[visit == 8 & !is.na(diabetes) & !is.na(neuropat
 # Questionnaire/symptoms only reported once, so no visit variable.
 # Contains 3 neuropathy markers/variables,
 
-names(cpd_data[[2]])
+# names(cpd_data[[2]])
 
 # Diabetes variable:
 names(cpd_data[[2]])[grepl("DM",names(cpd_data[[2]]))]
@@ -297,7 +297,7 @@ names(cpd_data[[2]]) <- to_snake_case(names(cpd_data[[2]]))
 cpd_data[[2]]$patient_id <- toupper(cpd_data[[2]]$patient_id)
 
 # Filtering to only id, diabetes status and the three neuropathy variables on numbness and pain :
-cpd_data <-
+cpd_data_vars <-
   cpd_data[[2]][, .(
     patient_id,
     dm_patient_medical_history,
@@ -310,35 +310,35 @@ cpd_data <-
 
 # Recode string data to binary and NAs:
 
-mod_cols = names(cpd_data)[2:5]
-cpd_data[ , (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
+mod_cols = names(cpd_data_vars)[2:5]
+cpd_data_vars[ , (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
 
 # Create the simpler neuropathy outcome variable:
 # neuropathy is defined as the presence of either neuropathy, or numbness or pain in the feet:
 
-cpd_data[, neuropathy_outcome := apply(cpd_data[, 3:5], 1, function(x)
+cpd_data_vars[, neuropathy_outcome := apply(cpd_data_vars[, 3:5], 1, function(x)
   sum(x, na.rm = T)) >= 1]
 
 # Set individuals with completely missing data to NA:
-cpd_data[, no_neuropathy_data := apply(cpd_data[, 3:5], 1, function(x)
+cpd_data_vars[, no_neuropathy_data := apply(cpd_data_vars[, 3:5], 1, function(x)
   sum(is.na(x))) == 3]
 
-cpd_data[, neuropathy_outcome := fifelse(no_neuropathy_data == T, NA, neuropathy_outcome)]
+cpd_data_vars[, neuropathy_outcome := fifelse(no_neuropathy_data == T, NA, neuropathy_outcome)]
 
 
 # rename diabetes variable for convenience:
-names(cpd_data)[2] <- "diabetes"
+names(cpd_data_vars)[2] <- "diabetes"
 
 
 # Output:
-cpd_data[, dataset := "cpd"]
-cpd_clean <- cpd_data[!is.na(diabetes) & !is.na(neuropathy_outcome), c(1, 2, 6, 8)]
+cpd_data_vars[, dataset := "cpd"]
+cpd_clean <- cpd_data_vars[!is.na(diabetes) & !is.na(neuropathy_outcome), c(1, 2, 6, 8)]
 
 
 # # 3.3: Clean cves data --------------------------------------------------------
 
 # Diabetes variable:
-names(cves_data)[grepl("DM",names(cves_data))]
+# names(cves_data)[grepl("DM",names(cves_data))]
 # "DM PATIENT MEDICAL HISTORY"
 # ("DM/Non-DM/Stroke"-variable hold no DM category here,
 # but the Non-DM group is used to add missing data in this dataset)
@@ -481,16 +481,48 @@ nrow(neuropathy_data[diabetes == T, .SD[1], by = patient_id]) # From 138 individ
 
 # But I don't expect ECG data to be available on more than approximately 90 individuals with diabetes.
 
-# I save both datasets, although we may end up only using the cded data from the baseline visit.
-
-# The full data set is saved, including individuals without diabetes and people who may not have ECG data
-# We'll see how much is useful when we open the ECG files.
 
 
 # 5. Save the clean neuropathy datasets ----------------------------------
 
-fwrite(neuropathy_data, file = here("output_data", "neuropathy_visit_2.csv"))
-fwrite(neuropathy_data_visit8, file = here("output_data", "neuropathy_visit_8.csv"))
+# Both CDED datasets could be saved, although we may end up only using the CDED data from the baseline visit.
+# Also, the full data set from all four sources, including individuals without diabetes and people who may not have ECG data could be saved:
+# fwrite(neuropathy_data, file = here("output_data", "neuropathy_visit_2.csv"))
+# fwrite(neuropathy_data_visit8, file = here("output_data", "neuropathy_visit_8.csv"))
+
+# For our use case (neuropathy yes or no in individuals with diabetes), only those with diabetes are needed.
+# Also, we only use the CDED and CPD datasets, as the ECGs from CVES and CVD will probably induce bias due to the setting.
+
+# CDED and CPD both save ECG datafiles as S"id"ECG (ALL-CAPS), so renamed accordingly:
 
 
+# Cleaned data is saved as separate files for each dataset and neuropathy label:
+# CDED:
+fwrite(neuropathy_data[diabetes == T &
+                         dataset == "cded" &
+                         neuropathy_outcome == F &
+                         patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
+       ,
+       file = here("output_data", "cded_healthy.csv"))
 
+fwrite(neuropathy_data[diabetes == T &
+                         dataset == "cded" &
+                         neuropathy_outcome == T &
+                         patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
+       ,
+       file = here("output_data", "cded_neuropathy.csv"))
+
+# CPD:
+fwrite(neuropathy_data[diabetes == T &
+                         dataset == "cpd" &
+                         neuropathy_outcome == F &
+                         patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
+       ,
+       file = here("output_data", "cpd_healthy.csv"))
+
+fwrite(neuropathy_data[diabetes == T &
+                         dataset == "cpd" &
+                         neuropathy_outcome == T &
+                         patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
+       ,
+       file = here("output_data", "cpd_neuropathy.csv"))
