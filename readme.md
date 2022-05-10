@@ -20,6 +20,8 @@ By combining four PhysioNet datasets, data is available on roughly 100 ECG from 
 
 ### Overview
 
+GitHub link: https://github.com/PandaPowell/ECG_DDA
+
 This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. ECG data is available for all datasets, but not on all participants, and some individuals having missing tabular data.
 Throughout this document, *R* code to reproduce calculations and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
