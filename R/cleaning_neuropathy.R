@@ -512,17 +512,20 @@ fwrite(neuropathy_data[diabetes == T &
        ,
        file = here("output_data", "cded_neuropathy.csv"))
 
-# CPD:
+
+# CPD: (only those not already present in the CDED dataset, to avoid overlaps)
 fwrite(neuropathy_data[diabetes == T &
                          dataset == "cpd" &
                          neuropathy_outcome == F &
-                         patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
+                         patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`) &
+                         !patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
        ,
        file = here("output_data", "cpd_healthy.csv"))
 
 fwrite(neuropathy_data[diabetes == T &
                          dataset == "cpd" &
                          neuropathy_outcome == T &
-                         patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
+                         patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`) &
+                         !patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), .(patient_id = paste0(patient_id, "ECG"), neuropathy_outcome)]
        ,
        file = here("output_data", "cpd_neuropathy.csv"))
