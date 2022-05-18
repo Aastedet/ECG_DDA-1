@@ -196,14 +196,18 @@ pre code {
 <li><a href="#unique-subjects-in-each-dataset-with-ecg-data-who-have-diabetes">Unique subjects in each dataset with ECG data, who have diabetes</a></li>
 <li><a href="#participant-overlap-between-datasets">Participant overlap between datasets</a></li>
 </ul></li>
+<li><a href="#study-dataset-cded-and-cpd">Study dataset: CDED and CPD</a>
+<ul>
+<li><a href="#prevalence-of-diabetic-neuropathy">Prevalence of diabetic neuropathy</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </div>
 
 <div id="aims-and-summary" class="section level1">
 <h1>Aims and summary</h1>
-<p>This project aims to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a standard 12-lead ECG.</p>
-<p>By combining four PhysioNet datasets, data is available on roughly 100 ECG from 90 individuals with diabetes, who have provided data on neuropathy status. ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvres) and may be inappropriate for use.</p>
+<p>This project aims to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a <del>standard 12-lead</del> 10 second ECG of two non-standard V1/V2 and V5/V6 leads.</p>
+<p>By combining four PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvers) and was deemed inappropriate for use.</p>
 <div id="data-sources" class="section level2">
 <h2>Data sources</h2>
 <div id="overview" class="section level3">
@@ -211,28 +215,28 @@ pre code {
 <p>GitHub link: <a href="https://github.com/PandaPowell/ECG_DDA" class="uri">https://github.com/PandaPowell/ECG_DDA</a></p>
 <p>This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. ECG data is available for all datasets, but not on all participants, and some individuals having missing tabular data. Throughout this document, <em>R</em> code to reproduce calculations and population flow is provided in folded chunks below the section of the text where these are mentioned.</p>
 <ul>
-<li><strong>Cerebromicrovascular Disease in Elderly with Diabetes</strong>
+<li><p><strong>Cerebromicrovascular Disease in Elderly with Diabetes</strong></p>
 <ul>
 <li>Abbreviated: <strong>CDED</strong></li>
 <li>Link: <a href="https://physionet.org/content/cded/1.0.0/" class="uri">https://physionet.org/content/cded/1.0.0/</a></li>
 <li>Folder: “/GE-79”</li>
 <li>Contents: 69 participants age 55-75 with or without diabetes</li>
 </ul></li>
-<li><strong>Cerebral perfusion and cognitive decline in type 2 diabetes</strong>
+<li><p><strong>Cerebral perfusion and cognitive decline in type 2 diabetes</strong></p>
 <ul>
 <li>Abbreviated: <strong>CPD</strong></li>
 <li>Link: <a href="https://physionet.org/content/cerebral-perfusion-diabetes/1.0.0/" class="uri">https://physionet.org/content/cerebral-perfusion-diabetes/1.0.0/</a></li>
 <li>Folder: “/GE-75”</li>
 <li>Contents: 140 participants age 50-85 years, 70 with type 2 diabetes + 70 without.</li>
 </ul></li>
-<li><strong>Cerebral Vasoregulation in Elderly with Stroke</strong>
+<li><p><strong>Cerebral Vasoregulation in Elderly with Stroke</strong></p>
 <ul>
 <li>Abbreviated: <strong>CVES</strong></li>
 <li>Link: <a href="https://www.physionet.org/content/cves/1.0.0/" class="uri">https://www.physionet.org/content/cves/1.0.0/</a></li>
 <li>Folder: “/GE-72”</li>
 <li>Contents: 120 participants, 60 with stroke, 60 without. Very few with diabetes.</li>
 </ul></li>
-<li><strong>Cerebral Vasoregulation in Diabetes</strong>
+<li><p><strong>Cerebral Vasoregulation in Diabetes</strong></p>
 <ul>
 <li>Abbreviated: <strong>CVD</strong></li>
 <li>Link: <a href="https://physionet.org/content/cerebral-vasoreg-diabetes/1.0.0/" class="uri">https://physionet.org/content/cerebral-vasoreg-diabetes/1.0.0/</a></li>
@@ -423,6 +427,116 @@ nrow(cves_data[completed_visit_status == &quot;COMPLETED&quot; &amp;
                  `DM PATIENT MEDICAL HISTORY` %in% c(&quot;yes&quot;, &quot;YES&quot;) &amp;
                  toupper(subject_number) %in% toupper(cvd_data[[4]][`Head Up Tilt D2` == 1 &amp;
                                                                       Group %in% c(&quot;DM&quot;, &quot;DMOH&quot;)]$`Subject ID`)])</code></pre>
+</div>
+</div>
+<div id="study-dataset-cded-and-cpd" class="section level2">
+<h2>Study dataset: CDED and CPD</h2>
+<p>For the models, we combined CDED (data from baseline visit) and CPD datasets, excluding records in the CPD data from the 7 individuals already present in the CDED dataset and leaving a final study population of 60 individuals.</p>
+<div id="prevalence-of-diabetic-neuropathy" class="section level3">
+<h3>Prevalence of diabetic neuropathy</h3>
+<p>The protocol states that neuropathy in the CDED dataset was diagnosed at some point using the validated symptom scale <a href="https://doi.org/10.1016/j.clinthera.2005.08.002">neuropathy total symptom score-6</a>, but the available variables do not correspond to this.</p>
+<p>Both CDED and CPD contain questionnaire data on numbness and painful sensations of the feet. The CPD dataset also contains an item on autonomic neuropathy symptoms, although it is unclear what specific symptoms this item covers.</p>
+<p>We defined diabetic neuropathy as a binary variable on the individual level as the presence of at least one of these symptoms. Individuals with missing data on all neuropathy items were excluded, while cases with missing data on only some items were interpreted as having no symptoms of these types.</p>
+<p>With this method, 24 cases of neuropathy were identified among the 60 individuals in the study population (7 of 22 individuals from CDED, 17 of 38 from CPD).</p>
+<pre class="r"><code>## Define nephropathy in each dataset:
+
+### CDED:
+#### Make column names prettier for future use and clean case inconsistency in ID variable:
+names(cded_data[[6]]) &lt;- to_snake_case(names(cded_data[[6]]))
+cded_data[[6]]$patient_id &lt;-  toupper(cded_data[[6]]$patient_id)
+
+# Filter to variables needed:
+cded_survey &lt;-
+  cded_data[[6]][, .(
+    patient_id,
+    visit,
+    dm_patient_medical_history,
+    numbness_autonomic_symptoms,
+    painful_feet_autonomic_symptoms
+  )]
+
+# Recode string data to binary and NAs:
+binary_converter_function &lt;- function(x) {
+  case_when(
+    x == &quot;N/A&quot; ~ NA,
+    x == &quot;YES&quot; | x == &quot;yes&quot; | x == &quot;Yes&quot; ~ TRUE,
+    x == &quot;NO&quot; | x == &quot;no&quot; | x == &quot;No&quot; ~ FALSE
+  )
+}
+
+# Select columns to be modified
+mod_cols = names(cded_survey)[3:5]
+cded_survey[ , (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
+
+
+# Create a simple neuropathy variable:
+# neuropathy is defined as the presence of either numbness or pain in the feet:
+# The few cases of missing data in a symptom variable is treated as no symptom of this kind.
+cded_survey[, neuropathy_outcome := apply(cded_survey[, 4:5], 1, function(x)
+  sum(x, na.rm = T)) &gt;= 1]
+
+# Set individuals with completely missing data to NA:
+cded_survey[, no_neuropathy_data := apply(cded_survey[, 4:5], 1, function(x)
+  sum(is.na(x))) == 2]
+
+cded_survey[, neuropathy_outcome := fifelse(no_neuropathy_data == T, NA, neuropathy_outcome)]
+
+# Rename diabetes variable for convenience:
+names(cded_survey)[3] &lt;- &quot;diabetes&quot;
+
+# Add variable to keep track of which dataset overlapping individuals came from:
+cded_survey[, dataset := &quot;cded&quot;]
+
+# Clean CDED dataset (visit 2 data from individuals with diabetes and ECG/neuropathy-data):
+cded_clean &lt;- cded_survey[visit == 2 &amp; diabetes == T &amp; !is.na(neuropathy_outcome) &amp; patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
+
+
+
+### CPD:
+# Clean column names and subject ID&#39;s:
+names(cpd_data[[2]]) &lt;- to_snake_case(names(cpd_data[[2]]))
+cpd_data[[2]]$patient_id &lt;- toupper(cpd_data[[2]]$patient_id)
+
+# Filtering to only id, diabetes status and the three neuropathy variables on numbness and pain :
+cpd_data_vars &lt;-
+  cpd_data[[2]][, .(
+    patient_id,
+    dm_patient_medical_history,
+    neuropathy_autonomic_symptoms,
+    numbness_autonomic_symptoms,
+    painful_feet_autonomic_symptoms
+  )]
+
+
+
+# Recode string data to binary and NAs:
+mod_cols = names(cpd_data_vars)[2:5]
+cpd_data_vars[ , (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
+
+# Create the simpler neuropathy outcome variable:
+# neuropathy is defined as the presence of either neuropathy, or numbness or pain in the feet:
+cpd_data_vars[, neuropathy_outcome := apply(cpd_data_vars[, 3:5], 1, function(x)
+  sum(x, na.rm = T)) &gt;= 1]
+
+# Set individuals with completely missing data to NA:
+cpd_data_vars[, no_neuropathy_data := apply(cpd_data_vars[, 3:5], 1, function(x)
+  sum(is.na(x))) == 3]
+
+cpd_data_vars[, neuropathy_outcome := fifelse(no_neuropathy_data == T, NA, neuropathy_outcome)]
+
+
+# rename diabetes variable and dataset variable for convenience:
+names(cpd_data_vars)[2] &lt;- &quot;diabetes&quot;
+cpd_data_vars[, dataset := &quot;cpd&quot;]
+
+# Clean CPD dataset (individuals not in CDED, with diabetes, and ECG/neuropathy-data):
+cpd_clean &lt;- cpd_data_vars[!patient_id %in% cded_clean$patient_id &amp; diabetes == T &amp; !is.na(neuropathy_outcome) &amp; patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
+
+# Merge to one dataset and count neuropathy cases:
+neuropathy_final &lt;- rbind(cded_clean, cpd_clean)
+
+nrow(neuropathy_final[dataset ==&quot;cded&quot; &amp; neuropathy_outcome == T])
+nrow(neuropathy_final[dataset ==&quot;cpd&quot; &amp; neuropathy_outcome == T])</code></pre>
 </div>
 </div>
 </div>
