@@ -694,7 +694,10 @@ file.copy(from = cpd_healthy, to = here(&quot;ecg_data&quot;, &quot;healthy&quot
 
 # Neuropathy:
 file.copy(from = cded_neuropathy, to = here(&quot;ecg_data&quot;, &quot;neuropathy&quot;))
-file.copy(from = cpd_neuropathy, to = here(&quot;ecg_data&quot;, &quot;neuropathy&quot;))</code></pre>
+file.copy(from = cpd_neuropathy, to = here(&quot;ecg_data&quot;, &quot;neuropathy&quot;))
+
+# Finally, copy the knitted html file to index.html (re-knit after changes):
+file.copy(from = here(&quot;readme.html&quot;), to = here(&quot;index.html&quot;), overwrite = T)</code></pre>
 </div>
 </div>
 <div id="off-to-python-and-google-colab" class="section level1">
