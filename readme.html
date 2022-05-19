@@ -472,16 +472,14 @@ cded_survey &lt;-
 
 # Recode string data to binary and NAs:
 binary_converter_function &lt;- function(x) {
-  case_when(
-    x == &quot;N/A&quot; ~ NA,
-    x == &quot;YES&quot; | x == &quot;yes&quot; | x == &quot;Yes&quot; ~ TRUE,
-    x == &quot;NO&quot; | x == &quot;no&quot; | x == &quot;No&quot; ~ FALSE
-  )
+  case_when(x == &quot;N/A&quot; ~ NA,
+            x == &quot;YES&quot; | x == &quot;yes&quot; | x == &quot;Yes&quot; ~ TRUE,
+            x == &quot;NO&quot; | x == &quot;no&quot; | x == &quot;No&quot; ~ FALSE)
 }
 
 # Select columns to be modified
 mod_cols = names(cded_survey)[3:5]
-cded_survey[ , (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
+cded_survey[, (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
 
 
 # Create a simple neuropathy variable:
@@ -503,7 +501,11 @@ names(cded_survey)[3] &lt;- &quot;diabetes&quot;
 cded_survey[, dataset := &quot;cded&quot;]
 
 # Clean CDED dataset (visit 2 data from individuals with diabetes and ECG/neuropathy-data):
-cded_clean &lt;- cded_survey[visit == 2 &amp; diabetes == T &amp; !is.na(neuropathy_outcome) &amp; patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
+cded_clean &lt;-
+  cded_survey[visit == 2 &amp;
+                diabetes == T &amp;
+                !is.na(neuropathy_outcome) &amp;
+                patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
 
 
 
@@ -526,7 +528,7 @@ cpd_data_vars &lt;-
 
 # Recode string data to binary and NAs:
 mod_cols = names(cpd_data_vars)[2:5]
-cpd_data_vars[ , (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
+cpd_data_vars[, (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
 
 # Create the simpler neuropathy outcome variable:
 # neuropathy is defined as the presence of either neuropathy, or numbness or pain in the feet:
@@ -545,15 +547,17 @@ names(cpd_data_vars)[2] &lt;- &quot;diabetes&quot;
 cpd_data_vars[, dataset := &quot;cpd&quot;]
 
 # Clean CPD dataset (individuals not in CDED, with diabetes, and ECG/neuropathy-data):
-cpd_clean &lt;- cpd_data_vars[!patient_id %in% cded_clean$patient_id &amp; diabetes == T &amp; !is.na(neuropathy_outcome) &amp; patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
+cpd_clean &lt;-
+  cpd_data_vars[!patient_id %in% cded_clean$patient_id &amp;
+                  diabetes == T &amp;
+                  !is.na(neuropathy_outcome) &amp;
+                  patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
 
 # Merge to one dataset and count neuropathy cases:
 neuropathy_final &lt;- rbind(cded_clean, cpd_clean)
 
-nrow(neuropathy_final[dataset ==&quot;cded&quot; &amp; neuropathy_outcome == T])
-nrow(neuropathy_final[dataset ==&quot;cpd&quot; &amp; neuropathy_outcome == T])
-
-fwrite</code></pre>
+nrow(neuropathy_final[dataset == &quot;cded&quot; &amp; neuropathy_outcome == T])
+nrow(neuropathy_final[dataset == &quot;cpd&quot; &amp; neuropathy_outcome == T])</code></pre>
 </div>
 </div>
 </div>
@@ -564,7 +568,12 @@ fwrite</code></pre>
 <p>Append patient id variable to match ECG data file names: ‘S’ + ID + ‘ECG’</p>
 <p>The final dataset looks like this before exporting to a csv file:</p>
 <pre class="r"><code># Append ID&#39;s:
-study_dataset &lt;- neuropathy_final[,.(patient_id = paste0(patient_id, &quot;ECG&quot;), dataset = factor(dataset), neuropathy_outcome)]
+study_dataset &lt;-
+  neuropathy_final[, .(
+    patient_id = paste0(patient_id, &quot;ECG&quot;),
+    dataset = factor(dataset),
+    neuropathy_outcome
+  )]
 
 # Export dataset
 fwrite(study_dataset, file = here(&quot;output_data&quot;, &quot;study_dataset.csv&quot;))
@@ -643,29 +652,38 @@ summary(study_dataset)</code></pre>
 <h2>Filter and export ECG files:</h2>
 <p>To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. ECGs from individuals with neuropathy go into the <code>/ecg_data/neuropathy/</code> folder, while those without go into the <code>/ecg_data/healthy/</code> folder.</p>
 <pre class="r"><code># Specify local source folder of CDED and CPD ECG data:
-cded_ecg_folder &lt;- &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/&quot;
+cded_ecg_folder &lt;-
+  &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/&quot;
 
 cpd_ecg_folder &lt;- &quot;C:/physionet/cpd/data/ecg&quot;
 
 # List ECT files of all healthy patients
 cded_files &lt;- list.files(cded_ecg_folder,
-           full.names = T)
+                         full.names = T)
 
 cpd_files &lt;- list.files(cpd_ecg_folder,
-           full.names = T)
+                        full.names = T)
 
 
 # Filter files of each dataset to only subjects in study population and split into groups based on neuropathy status:
 
 # CDED:
-cded_healthy &lt;- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == &quot;cded&quot; &amp; neuropathy_outcome == FALSE]$patient_id]
+cded_healthy &lt;-
+  cded_files[str_sub(cded_files, -12, -5) %in% study_dataset[dataset == &quot;cded&quot; &amp;
+                                                               neuropathy_outcome == FALSE]$patient_id]
 
-cded_neuropathy &lt;- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == &quot;cded&quot; &amp; neuropathy_outcome == TRUE]$patient_id]
+cded_neuropathy &lt;-
+  cded_files[str_sub(cded_files, -12, -5) %in% study_dataset[dataset == &quot;cded&quot; &amp;
+                                                               neuropathy_outcome == TRUE]$patient_id]
 
 # CPD:
-cpd_healthy &lt;- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == &quot;cpd&quot; &amp; neuropathy_outcome == FALSE]$patient_id]
+cpd_healthy &lt;-
+  cpd_files[str_sub(cpd_files, -12, -5) %in% study_dataset[dataset == &quot;cpd&quot; &amp;
+                                                             neuropathy_outcome == FALSE]$patient_id]
 
-cpd_neuropathy &lt;- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == &quot;cpd&quot; &amp; neuropathy_outcome == TRUE]$patient_id]
+cpd_neuropathy &lt;-
+  cpd_files[str_sub(cpd_files, -12, -5) %in% study_dataset[dataset == &quot;cpd&quot; &amp;
+                                                             neuropathy_outcome == TRUE]$patient_id]
 
 
 # Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
