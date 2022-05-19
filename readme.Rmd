@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Preface:
 
-This document is best viewed on the [properly formatted html page](https://htmlpreview.github.io/?https://github.com/PandaPowell/ECG_DDA/blob/master/readme.html).
+This document is best viewed on the [properly formatted html page](https://pandapowell.github.io/ECG_DDA/index.html).
 
 Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
 
