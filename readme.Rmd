@@ -71,6 +71,8 @@ library(dplyr)
 library(data.table)
 library(here)
 library(snakecase)
+library(fs)
+library(stringr)
 
 # Load tabular data:
 
@@ -384,4 +386,71 @@ neuropathy_final <- rbind(cded_clean, cpd_clean)
 
 nrow(neuropathy_final[dataset =="cded" & neuropathy_outcome == T])
 nrow(neuropathy_final[dataset =="cpd" & neuropathy_outcome == T])
+
+fwrite
 ```
+# Export tabular data and ECG data
+
+## Final cleaning of tabular data:
+Append patient id variable to match ECG data file names: 'S' + ID + 'ECG'
+
+The final dataset looks like this before exporting to a csv file:
+
+```{r}
+# Append ID's:
+study_dataset <- neuropathy_final[,.(patient_id = paste0(patient_id, "ECG"), dataset = factor(dataset), neuropathy_outcome)]
+
+# Export dataset
+fwrite(study_dataset, file = here("output_data", "study_dataset.csv"))
+
+# Summary and contents:
+summary(study_dataset)
+study_dataset
+
+```
+
+## Filter and export ECG files:
+
+To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes.
+
+```{r}
+
+# Specify local source folder of CDED and CPD ECG data:
+cded_ecg_folder <- "C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/"
+
+cpd_ecg_folder <- "C:/physionet/cpd/data/ecg"
+
+# List ECT files of all healthy patients
+cded_files <- list.files(cded_ecg_folder,
+           full.names = T)
+
+cpd_files <- list.files(cpd_ecg_folder,
+           full.names = T)
+
+
+# Filter files of each dataset to only subjects in study population and split into groups based on neuropathy status:
+
+# CDED:
+cded_healthy <- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == "cded" & neuropathy_outcome == FALSE]$patient_id]
+
+cded_neuropathy <- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == "cded" & neuropathy_outcome == TRUE]$patient_id]
+
+# CPD:
+cpd_healthy <- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == "cpd" & neuropathy_outcome == FALSE]$patient_id]
+
+cpd_neuropathy <- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == "cpd" & neuropathy_outcome == TRUE]$patient_id]
+
+
+# Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
+
+# Healthy:
+file_copy(path = cded_healthy, new_path = here("ecg_data", "healthy"), overwrite = T)
+file_copy(path = cpd_healthy, new_path = here("ecg_data", "healthy"), overwrite = T)
+
+# Neuropathy:
+file_copy(path = cded_neuropathy, new_path = here("ecg_data", "neuropathy"), overwrite = T)
+file_copy(path = cpd_neuropathy, new_path = here("ecg_data", "neuropathy"), overwrite = T)
+
+```
+
+Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy in the folder name, patient ID in the file name).

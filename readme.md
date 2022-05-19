@@ -68,7 +68,14 @@ library(dplyr)
 library(data.table)
 library(here)
 library(snakecase)
+library(fs)
+```
 
+```
+## Warning: package 'fs' was built under R version 4.1.3
+```
+
+```r
 # Load tabular data:
 
 # From "Cerebromicrovascular Disease in Elderly with Diabetes" ("GE-79"):
@@ -377,4 +384,112 @@ neuropathy_final <- rbind(cded_clean, cpd_clean)
 
 nrow(neuropathy_final[dataset =="cded" & neuropathy_outcome == T])
 nrow(neuropathy_final[dataset =="cpd" & neuropathy_outcome == T])
+
+fwrite
 ```
+#### Clean and export
+
+Append patient id variable to match ECG data file names: 'S' + ID + 'ECG'
+
+Final dataset looks like this:
+
+
+```r
+study_dataset <- neuropathy_final[,.(patient_id = paste0(patient_id, "ECG"), dataset = factor(dataset), neuropathy_outcome)]
+
+summary(study_dataset)
+```
+
+```
+##   patient_id        dataset   neuropathy_outcome
+##  Length:60          cded:22   Mode :logical     
+##  Class :character   cpd :38   FALSE:36          
+##  Mode  :character             TRUE :24
+```
+
+```r
+study_dataset
+```
+
+```
+##     patient_id dataset neuropathy_outcome
+##  1:   S0105ECG    cded              FALSE
+##  2:   S0264ECG    cded               TRUE
+##  3:   S0296ECG    cded              FALSE
+##  4:   S0301ECG    cded              FALSE
+##  5:   S0308ECG    cded               TRUE
+##  6:   S0314ECG    cded              FALSE
+##  7:   S0318ECG    cded              FALSE
+##  8:   S0372ECG    cded              FALSE
+##  9:   S0430ECG    cded              FALSE
+## 10:   S0513ECG    cded              FALSE
+## 11:   S0536ECG    cded              FALSE
+## 12:   S0539ECG    cded              FALSE
+## 13:   S0540ECG    cded              FALSE
+## 14:   S0543ECG    cded               TRUE
+## 15:   S0552ECG    cded               TRUE
+## 16:   S0554ECG    cded              FALSE
+## 17:   S0555ECG    cded               TRUE
+## 18:   S0561ECG    cded              FALSE
+## 19:   S0562ECG    cded              FALSE
+## 20:   S0582ECG    cded               TRUE
+## 21:   S0591ECG    cded              FALSE
+## 22:   S0610ECG    cded               TRUE
+## 23:   S0250ECG     cpd              FALSE
+## 24:   S0256ECG     cpd              FALSE
+## 25:   S0273ECG     cpd               TRUE
+## 26:   S0282ECG     cpd              FALSE
+## 27:   S0287ECG     cpd              FALSE
+## 28:   S0288ECG     cpd              FALSE
+## 29:   S0292ECG     cpd              FALSE
+## 30:   S0300ECG     cpd               TRUE
+## 31:   S0304ECG     cpd              FALSE
+## 32:   S0310ECG     cpd               TRUE
+## 33:   S0312ECG     cpd              FALSE
+## 34:   S0315ECG     cpd               TRUE
+## 35:   S0316ECG     cpd              FALSE
+## 36:   S0317ECG     cpd               TRUE
+## 37:   S0326ECG     cpd               TRUE
+## 38:   S0327ECG     cpd               TRUE
+## 39:   S0339ECG     cpd              FALSE
+## 40:   S0342ECG     cpd              FALSE
+## 41:   S0349ECG     cpd               TRUE
+## 42:   S0365ECG     cpd               TRUE
+## 43:   S0366ECG     cpd              FALSE
+## 44:   S0381ECG     cpd               TRUE
+## 45:   S0382ECG     cpd               TRUE
+## 46:   S0390ECG     cpd              FALSE
+## 47:   S0392ECG     cpd               TRUE
+## 48:   S0398ECG     cpd              FALSE
+## 49:   S0403ECG     cpd              FALSE
+## 50:   S0405ECG     cpd               TRUE
+## 51:   S0406ECG     cpd               TRUE
+## 52:   S0409ECG     cpd              FALSE
+## 53:   S0416ECG     cpd              FALSE
+## 54:   S0420ECG     cpd               TRUE
+## 55:   S0423ECG     cpd              FALSE
+## 56:   S0424ECG     cpd              FALSE
+## 57:   S0426ECG     cpd              FALSE
+## 58:   S0432ECG     cpd               TRUE
+## 59:   S0433ECG     cpd              FALSE
+## 60:   S0434ECG     cpd               TRUE
+##     patient_id dataset neuropathy_outcome
+```
+
+# Export and filter ECGs:
+
+To save space
+
+```r
+fwrite(neuropathy_final[,.(patient_id = paste0(patient_id, "ECG"), dataset, neuropathy_outcome)]
+       ,
+       file = here("output_data", "cded_healthy.csv"))
+
+# Add local source folder of CDED and CPD ECG data:
+
+
+
+cded_ecg_folder <- "C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/"
+cpd_ecg_folder <- "C:/physionet/cpd/data/ecg"
+```
+
