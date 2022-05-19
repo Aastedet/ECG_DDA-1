@@ -12,9 +12,9 @@ output:
 
 # Preface:
 
-This document is best viewed on the [properly formatted html page](<https://htmlpreview.github.io/?https://github.com/PandaPowell/ECG_DDA/blob/master/readme.html>).
+This document is best viewed on the [properly formatted html page](https://htmlpreview.github.io/?https://github.com/PandaPowell/ECG_DDA/blob/master/readme.html).
 
-Sources are contained in the [GitHub repository](<https://github.com/PandaPowell/ECG_DDA>).
+Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
 
 This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. ECG data is available for all datasets, but not on all participants, and some individuals having missing tabular data.
 
@@ -24,8 +24,7 @@ Throughout this document, *R* code to reproduce data processing and population f
 
 This project aimed to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
 
-By combining four PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvers) and was deemed inappropriate for use.
-Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
+By combining four PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvers) and was deemed inappropriate for use. Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
 
 # Data sources
 
@@ -35,31 +34,29 @@ Thus, the final dataset consisted of 60 individuals with diabetes from two Physi
 
     -   Abbreviated: **CDED**
     -   Link: <https://physionet.org/content/cded/1.0.0/>
-    -   Folder: "/GE-79"
+    -   Folder: `/raw_csv_data/GE-79/` 
     -   Contents: 69 participants age 55-75 with or without diabetes
 
 -   **Cerebral perfusion and cognitive decline in type 2 diabetes**
 
     -   Abbreviated: **CPD**
     -   Link: <https://physionet.org/content/cerebral-perfusion-diabetes/1.0.0/>
-    -   Folder: "/GE-75"
+    -   Folder: `/raw_csv_data/GE-75/`
     -   Contents: 140 participants age 50-85 years, 70 with type 2 diabetes + 70 without.
 
 -   **Cerebral Vasoregulation in Elderly with Stroke**
 
     -   Abbreviated: **CVES**
     -   Link: <https://www.physionet.org/content/cves/1.0.0/>
-    -   Folder: "/GE-72"
+    -   Folder: `/raw_csv_data/GE-72/`
     -   Contents: 120 participants, 60 with stroke, 60 without. Very few with diabetes.
 
 -   **Cerebral Vasoregulation in Diabetes**
 
     -   Abbreviated: **CVD**
     -   Link: <https://physionet.org/content/cerebral-vasoreg-diabetes/1.0.0/>
-    -   Folder: "/GE-71"
+    -   Folder: `/raw_csv_data/GE-71/`
     -   Contents: 86 participants age 55-75 years, 37 with type 2 diabetes + 49 without.
-
-
 
 
 ```r
@@ -68,14 +65,8 @@ library(dplyr)
 library(data.table)
 library(here)
 library(snakecase)
-library(fs)
-```
+library(stringr)
 
-```
-## Warning: package 'fs' was built under R version 4.1.3
-```
-
-```r
 # Load tabular data:
 
 # From "Cerebromicrovascular Disease in Elderly with Diabetes" ("GE-79"):
@@ -111,8 +102,6 @@ The above contents are what the documentation describes. That does not match the
 -   CVES: 172
 -   CVD: 86
 -   Combined: 391
-
-
 
 
 ```r
@@ -387,16 +376,24 @@ nrow(neuropathy_final[dataset =="cpd" & neuropathy_outcome == T])
 
 fwrite
 ```
-#### Clean and export
+
+# Export tabular data and ECG data
+
+## Final cleaning of tabular data:
 
 Append patient id variable to match ECG data file names: 'S' + ID + 'ECG'
 
-Final dataset looks like this:
+The final dataset looks like this before exporting to a csv file:
 
 
 ```r
+# Append ID's:
 study_dataset <- neuropathy_final[,.(patient_id = paste0(patient_id, "ECG"), dataset = factor(dataset), neuropathy_outcome)]
 
+# Export dataset
+fwrite(study_dataset, file = here("output_data", "study_dataset.csv"))
+
+# Summary and contents:
 summary(study_dataset)
 ```
 
@@ -476,20 +473,51 @@ study_dataset
 ##     patient_id dataset neuropathy_outcome
 ```
 
-# Export and filter ECGs:
+## Filter and export ECG files:
 
-To save space
+To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. ECGs from individuals with neuropathy go into the `/ecg_data/neuropathy/` folder, while those without go into the `/ecg_data/healthy/` folder.
+
 
 ```r
-fwrite(neuropathy_final[,.(patient_id = paste0(patient_id, "ECG"), dataset, neuropathy_outcome)]
-       ,
-       file = here("output_data", "cded_healthy.csv"))
-
-# Add local source folder of CDED and CPD ECG data:
-
-
-
+# Specify local source folder of CDED and CPD ECG data:
 cded_ecg_folder <- "C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/"
+
 cpd_ecg_folder <- "C:/physionet/cpd/data/ecg"
+
+# List ECT files of all healthy patients
+cded_files <- list.files(cded_ecg_folder,
+           full.names = T)
+
+cpd_files <- list.files(cpd_ecg_folder,
+           full.names = T)
+
+
+# Filter files of each dataset to only subjects in study population and split into groups based on neuropathy status:
+
+# CDED:
+cded_healthy <- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == "cded" & neuropathy_outcome == FALSE]$patient_id]
+
+cded_neuropathy <- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == "cded" & neuropathy_outcome == TRUE]$patient_id]
+
+# CPD:
+cpd_healthy <- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == "cpd" & neuropathy_outcome == FALSE]$patient_id]
+
+cpd_neuropathy <- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == "cpd" & neuropathy_outcome == TRUE]$patient_id]
+
+
+# Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
+
+# Healthy:
+file.copy(from = cded_healthy, to = here("ecg_data", "healthy"))
+file.copy(from = cpd_healthy, to = here("ecg_data", "healthy"))
+
+# Neuropathy:
+file.copy(from = cded_neuropathy, to = here("ecg_data", "neuropathy"))
+file.copy(from = cpd_neuropathy, to = here("ecg_data", "neuropathy"))
 ```
 
+# Off to Python and Google Colab!
+
+Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy in the folder name, patient ID in the file name).
+
+**See you on the other side!**

@@ -203,7 +203,12 @@ pre code {
 <li><a href="#final-dataset">Final dataset</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#export-and-filter-ecgs">Export and filter ECGs:</a></li>
+<li><a href="#export-tabular-data-and-ecg-data">Export tabular data and ECG data</a>
+<ul>
+<li><a href="#final-cleaning-of-tabular-data">Final cleaning of tabular data:</a></li>
+<li><a href="#filter-and-export-ecg-files">Filter and export ECG files:</a></li>
+</ul></li>
+<li><a href="#off-to-python-and-google-colab">Off to Python and Google Colab!</a></li>
 </ul>
 </div>
 
@@ -228,28 +233,28 @@ pre code {
 <ul>
 <li>Abbreviated: <strong>CDED</strong></li>
 <li>Link: <a href="https://physionet.org/content/cded/1.0.0/" class="uri">https://physionet.org/content/cded/1.0.0/</a></li>
-<li>Folder: “/GE-79”</li>
+<li>Folder: <code>/raw_csv_data/GE-79/</code></li>
 <li>Contents: 69 participants age 55-75 with or without diabetes</li>
 </ul></li>
 <li><p><strong>Cerebral perfusion and cognitive decline in type 2 diabetes</strong></p>
 <ul>
 <li>Abbreviated: <strong>CPD</strong></li>
 <li>Link: <a href="https://physionet.org/content/cerebral-perfusion-diabetes/1.0.0/" class="uri">https://physionet.org/content/cerebral-perfusion-diabetes/1.0.0/</a></li>
-<li>Folder: “/GE-75”</li>
+<li>Folder: <code>/raw_csv_data/GE-75/</code></li>
 <li>Contents: 140 participants age 50-85 years, 70 with type 2 diabetes + 70 without.</li>
 </ul></li>
 <li><p><strong>Cerebral Vasoregulation in Elderly with Stroke</strong></p>
 <ul>
 <li>Abbreviated: <strong>CVES</strong></li>
 <li>Link: <a href="https://www.physionet.org/content/cves/1.0.0/" class="uri">https://www.physionet.org/content/cves/1.0.0/</a></li>
-<li>Folder: “/GE-72”</li>
+<li>Folder: <code>/raw_csv_data/GE-72/</code></li>
 <li>Contents: 120 participants, 60 with stroke, 60 without. Very few with diabetes.</li>
 </ul></li>
 <li><p><strong>Cerebral Vasoregulation in Diabetes</strong></p>
 <ul>
 <li>Abbreviated: <strong>CVD</strong></li>
 <li>Link: <a href="https://physionet.org/content/cerebral-vasoreg-diabetes/1.0.0/" class="uri">https://physionet.org/content/cerebral-vasoreg-diabetes/1.0.0/</a></li>
-<li>Folder: “/GE-71”</li>
+<li>Folder: <code>/raw_csv_data/GE-71/</code></li>
 <li>Contents: 86 participants age 55-75 years, 37 with type 2 diabetes + 49 without.</li>
 </ul></li>
 </ul>
@@ -258,9 +263,9 @@ library(dplyr)
 library(data.table)
 library(here)
 library(snakecase)
-library(fs)</code></pre>
-<pre><code>## Warning: package &#39;fs&#39; was built under R version 4.1.3</code></pre>
-<pre class="r"><code># Load tabular data:
+library(stringr)
+
+# Load tabular data:
 
 # From &quot;Cerebromicrovascular Disease in Elderly with Diabetes&quot; (&quot;GE-79&quot;):
 # https://physionet.org/content/cded/1.0.0/
@@ -549,12 +554,22 @@ nrow(neuropathy_final[dataset ==&quot;cded&quot; &amp; neuropathy_outcome == T])
 nrow(neuropathy_final[dataset ==&quot;cpd&quot; &amp; neuropathy_outcome == T])
 
 fwrite</code></pre>
-<div id="clean-and-export" class="section level4">
-<h4>Clean and export</h4>
+</div>
+</div>
+</div>
+<div id="export-tabular-data-and-ecg-data" class="section level1">
+<h1>Export tabular data and ECG data</h1>
+<div id="final-cleaning-of-tabular-data" class="section level2">
+<h2>Final cleaning of tabular data:</h2>
 <p>Append patient id variable to match ECG data file names: ‘S’ + ID + ‘ECG’</p>
-<p>Final dataset looks like this:</p>
-<pre class="r"><code>study_dataset &lt;- neuropathy_final[,.(patient_id = paste0(patient_id, &quot;ECG&quot;), dataset = factor(dataset), neuropathy_outcome)]
+<p>The final dataset looks like this before exporting to a csv file:</p>
+<pre class="r"><code># Append ID&#39;s:
+study_dataset &lt;- neuropathy_final[,.(patient_id = paste0(patient_id, &quot;ECG&quot;), dataset = factor(dataset), neuropathy_outcome)]
 
+# Export dataset
+fwrite(study_dataset, file = here(&quot;output_data&quot;, &quot;study_dataset.csv&quot;))
+
+# Summary and contents:
 summary(study_dataset)</code></pre>
 <pre><code>##   patient_id        dataset   neuropathy_outcome
 ##  Length:60          cded:22   Mode :logical     
@@ -624,22 +639,50 @@ summary(study_dataset)</code></pre>
 ## 60:   S0434ECG     cpd               TRUE
 ##     patient_id dataset neuropathy_outcome</code></pre>
 </div>
-</div>
-</div>
-</div>
-<div id="export-and-filter-ecgs" class="section level1">
-<h1>Export and filter ECGs:</h1>
-<p>To save space</p>
-<pre class="r"><code>fwrite(neuropathy_final[,.(patient_id = paste0(patient_id, &quot;ECG&quot;), dataset, neuropathy_outcome)]
-       ,
-       file = here(&quot;output_data&quot;, &quot;cded_healthy.csv&quot;))
-
-# Add local source folder of CDED and CPD ECG data:
-
-
-
+<div id="filter-and-export-ecg-files" class="section level2">
+<h2>Filter and export ECG files:</h2>
+<p>To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. ECGs from individuals with neuropathy go into the <code>/ecg_data/neuropathy/</code> folder, while those without go into the <code>/ecg_data/healthy/</code> folder.</p>
+<pre class="r"><code># Specify local source folder of CDED and CPD ECG data:
 cded_ecg_folder &lt;- &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/&quot;
-cpd_ecg_folder &lt;- &quot;C:/physionet/cpd/data/ecg&quot;</code></pre>
+
+cpd_ecg_folder &lt;- &quot;C:/physionet/cpd/data/ecg&quot;
+
+# List ECT files of all healthy patients
+cded_files &lt;- list.files(cded_ecg_folder,
+           full.names = T)
+
+cpd_files &lt;- list.files(cpd_ecg_folder,
+           full.names = T)
+
+
+# Filter files of each dataset to only subjects in study population and split into groups based on neuropathy status:
+
+# CDED:
+cded_healthy &lt;- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == &quot;cded&quot; &amp; neuropathy_outcome == FALSE]$patient_id]
+
+cded_neuropathy &lt;- cded_files[str_sub(cded_files,-12,-5) %in% study_dataset[dataset == &quot;cded&quot; &amp; neuropathy_outcome == TRUE]$patient_id]
+
+# CPD:
+cpd_healthy &lt;- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == &quot;cpd&quot; &amp; neuropathy_outcome == FALSE]$patient_id]
+
+cpd_neuropathy &lt;- cpd_files[str_sub(cpd_files,-12,-5) %in% study_dataset[dataset == &quot;cpd&quot; &amp; neuropathy_outcome == TRUE]$patient_id]
+
+
+# Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
+
+# Healthy:
+file.copy(from = cded_healthy, to = here(&quot;ecg_data&quot;, &quot;healthy&quot;))
+file.copy(from = cpd_healthy, to = here(&quot;ecg_data&quot;, &quot;healthy&quot;))
+
+# Neuropathy:
+file.copy(from = cded_neuropathy, to = here(&quot;ecg_data&quot;, &quot;neuropathy&quot;))
+file.copy(from = cpd_neuropathy, to = here(&quot;ecg_data&quot;, &quot;neuropathy&quot;))</code></pre>
+</div>
+</div>
+<div id="off-to-python-and-google-colab" class="section level1">
+<h1>Off to Python and Google Colab!</h1>
+<p>Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy in the folder name, patient ID in the file name).</p>
+<p><strong>See you on the other side!</strong></p>
 </div>
 
 
