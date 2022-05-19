@@ -1,6 +1,6 @@
 ---
 title: "Overview and flow of tabular data"
-author: "Anders Group Data Science Spring School 2022"
+author: "Group 2 Data Science Spring School 2022"
 output:
   html_document:
     toc: true
@@ -11,12 +11,19 @@ output:
 
 
 # Preface:
+This is the repository for ~~Group *Anders*~~ **Group 2** of the Data Science Spring School & Challenge, notorious Kahoot quiz winners!
 
-This document is best viewed on the [properly formatted html page](https://pandapowell.github.io/ECG_DDA/index.html).
+```r
+knitr::include_graphics(here::here("misc", "quizwinners.jpg"))
+```
+
+<img src="C:/Users/au219333/Desktop/Repos/ECG_DDA/misc/quizwinners.jpg" width="66%" />
+
+This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG_DDA/index.html).
 
 Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
 
-This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. ECG data is available for all datasets, but not on all participants, and some individuals having missing tabular data.
+This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for all datasets, but not on all participants, and some individuals having missing tabular data.
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
@@ -482,9 +489,11 @@ study_dataset
 ##     patient_id dataset neuropathy_outcome
 ```
 
-## Filter and export ECG files:
+## Filter, split and export ECG files:
 
-To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. ECGs from individuals with neuropathy go into the `/ecg_data/neuropathy/` folder, while those without go into the `/ecg_data/healthy/` folder. Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this locally.
+To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. We'll also split the ECGs into training and validation parent folders, so  ECGs from the same individual cannot be present in both training a validation datasets (we'll be splitting the ECGs into small snippets later, so each individual will contribute multiple ECGs). Otherwise we risk [data leakage](https://en.wikipedia.org/wiki/Leakage_(machine_learning)) between the training and validation datasets, and the model might learn to identify *individuals*, rather than signals of *neuropathy*, which would erode model performance on external data. A somewhat famous example of this mistake being [Andrew Ng's random split of 112,120 x-ray images from 30,805 individuals](https://twitter.com/nizkroberts/status/931121395748270080) which was subsequently corrected.
+
+We'll use a random sample of roughly 20% of individuals from each group into the validation set, to ensure that both CDED and CPD ECG from healthy and neuropathy patients are proportionally distributed across training and validation sets. Due to the limited data available, we do not set aside a test dataset.
 
 
 ```r
@@ -522,20 +531,138 @@ cpd_neuropathy <-
   cpd_files[str_sub(cpd_files, -12, -5) %in% study_dataset[dataset == "cpd" &
                                                              neuropathy_outcome == TRUE]$patient_id]
 
+# Sample 1 in 5 to validation datasets:
+# Set seed for reproducibility:
+set.seed(2)
 
+valid_cded_healthy <-
+  cded_healthy[str_sub(cded_healthy,-12,-5) %in% sample(
+    study_dataset[dataset == "cded" &
+                    neuropathy_outcome == FALSE]$patient_id,
+    0.20 * nrow(study_dataset[dataset == "cded" &
+                                neuropathy_outcome == FALSE]))]
+
+valid_cded_neuropathy <-
+  cded_neuropathy[str_sub(cded_neuropathy,-12,-5) %in% sample(
+    study_dataset[dataset == "cded" &
+                    neuropathy_outcome == TRUE]$patient_id,
+    0.20 * nrow(study_dataset[dataset == "cded" &
+                                neuropathy_outcome == TRUE]))]
+
+valid_cpd_healthy <-
+  cpd_healthy[str_sub(cpd_healthy,-12,-5) %in% sample(
+    study_dataset[dataset == "cpd" &
+                    neuropathy_outcome == FALSE]$patient_id,
+    0.20 * nrow(study_dataset[dataset == "cpd" &
+                                neuropathy_outcome == FALSE]))]
+
+valid_cpd_neuropathy <-
+  cpd_neuropathy[str_sub(cpd_neuropathy,-12,-5) %in% sample(
+    study_dataset[dataset == "cpd" &
+                    neuropathy_outcome == TRUE]$patient_id,
+    0.20 * nrow(study_dataset[dataset == "cpd" &
+                                neuropathy_outcome == TRUE]))]
+
+# And remove these individuals from the training set:
+
+train_cded_healthy <- cded_healthy[!cded_healthy %in% valid_cded_healthy]
+train_cded_neuropathy <- cded_neuropathy[!cded_neuropathy %in% valid_cded_neuropathy]
+train_cpd_healthy <- cpd_healthy[!cpd_healthy %in% valid_cpd_healthy]
+train_cpd_neuropathy <- cpd_neuropathy[!cpd_neuropathy %in% valid_cpd_neuropathy]
+```
+
+In this fashion, we end up with a training set containing 49 individuals, and a validation set containing 11 individuals.
+
+Training set:
+
+
+```r
+unique(str_sub(
+  c(
+    train_cded_healthy,
+    train_cded_neuropathy,
+    train_cpd_healthy,
+    train_cpd_neuropathy
+  ),
+  -12,
+  -5
+))
+```
+
+```
+##  [1] "S0105ECG" "S0296ECG" "S0301ECG" "S0314ECG" "S0430ECG" "S0513ECG"
+##  [7] "S0536ECG" "S0539ECG" "S0540ECG" "S0554ECG" "S0561ECG" "S0591ECG"
+## [13] "S0308ECG" "S0543ECG" "S0552ECG" "S0555ECG" "S0582ECG" "S0610ECG"
+## [19] "S0250ECG" "S0256ECG" "S0282ECG" "S0287ECG" "S0288ECG" "S0292ECG"
+## [25] "S0304ECG" "S0312ECG" "S0339ECG" "S0342ECG" "S0390ECG" "S0398ECG"
+## [31] "S0403ECG" "S0409ECG" "S0424ECG" "S0426ECG" "S0433ECG" "S0300ECG"
+## [37] "S0315ECG" "S0317ECG" "S0326ECG" "S0327ECG" "S0349ECG" "S0365ECG"
+## [43] "S0381ECG" "S0392ECG" "S0405ECG" "S0406ECG" "S0420ECG" "S0432ECG"
+## [49] "S0434ECG"
+```
+
+Validation set:
+
+
+```r
+unique(str_sub(
+  c(
+    valid_cded_healthy,
+    valid_cded_neuropathy,
+    valid_cpd_healthy,
+    valid_cpd_neuropathy
+  ),
+  -12,
+  -5
+))
+```
+
+```
+##  [1] "S0318ECG" "S0372ECG" "S0562ECG" "S0264ECG" "S0316ECG" "S0366ECG"
+##  [7] "S0416ECG" "S0423ECG" "S0273ECG" "S0310ECG" "S0382ECG"
+```
+
+Training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_data/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_data/valid/neuropathy/` and `/ecg_data/valid/healthy/` folders. Like so:
+
+```
+/ecg_data
+├── /train
+│   ├── /healthy/
+│   └── /neuropathy/
+└── /valid
+    ├── /healthy/
+    └── /neuropathy/
+
+```
+
+
+```r
 # Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
 
+# Training set:
 # Healthy:
-file.copy(from = cded_healthy, to = here("ecg_data", "healthy"))
-file.copy(from = cpd_healthy, to = here("ecg_data", "healthy"))
+file.copy(from = train_cded_healthy, to = here("ecg_data", "train", "healthy"))
+file.copy(from = train_cpd_healthy, to = here("ecg_data", "train", "healthy"))
 
 # Neuropathy:
-file.copy(from = cded_neuropathy, to = here("ecg_data", "neuropathy"))
-file.copy(from = cpd_neuropathy, to = here("ecg_data", "neuropathy"))
+file.copy(from = train_cded_neuropathy, to = here("ecg_data", "train", "neuropathy"))
+file.copy(from = train_cpd_neuropathy, to = here("ecg_data", "train", "neuropathy"))
+
+
+# Validation set:
+# Healthy:
+file.copy(from = valid_cded_healthy, to = here("ecg_data", "valid", "healthy"))
+file.copy(from = valid_cpd_healthy, to = here("ecg_data", "valid", "healthy"))
+
+# Neuropathy:
+file.copy(from = valid_cded_neuropathy, to = here("ecg_data", "valid", "neuropathy"))
+file.copy(from = valid_cpd_neuropathy, to = here("ecg_data", "valid", "neuropathy"))
 ```
+
+Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this.
 
 # Off to Python and Google Colab!
 
-Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy in the folder name, patient ID in the file name).
+Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy label in the folder name, ECG ID in the file name).
 
 **See you on the other side!**
