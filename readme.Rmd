@@ -138,7 +138,7 @@ length(unique(toupper(
 
 ```
 
-## Unique subjects with ECG data available
+### Unique subjects with ECG data available
 
 All four datasets include data on whether ECG data is missing or not. In the CDED and CPD datasets, this is described with an explicit variable. In the CVES and CVD datasets, we're making a qualified guess based on whether that person completed the visit where ECGs were performed:
 
@@ -176,7 +176,7 @@ length(unique(toupper(
 
 ```
 
-## Unique subjects in each dataset with ECG data, who have diabetes
+### Unique subjects in each dataset with ECG data, who have diabetes
 
 All four datasets provide data on diabetes status. Note that these individuals may provide more than one ECG, e.g. if ECGs are performed at baseline and at follow-up:
 
@@ -217,7 +217,7 @@ length(unique(toupper(
 
 ```
 
-## Participant overlap between datasets
+### Participant overlap between datasets
 
 Overlap in participants (with ECG data and diabetes) between the datasets is limited to 8 participants in CDED, who are also present in CPD (7) and CVD (1).
 
@@ -268,7 +268,7 @@ nrow(cves_data[completed_visit_status == "COMPLETED" &
 
 ```
 
-# Study dataset: individuals in CDED and CPD with diabetes, and available data on ECG and neuropathy
+# Study dataset: Individuals in CDED and CPD with diabetes, and data on ECG and neuropathy
 
 For the models, we combined CDED (data from baseline visit) and CPD datasets, excluding records in the CPD data from the 7 individuals already present in the CDED dataset and leaving a final study population of 60 individuals.
 

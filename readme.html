@@ -191,12 +191,12 @@ pre code {
 <li><a href="#actual-size-of-usable-data">Actual size of usable data</a>
 <ul>
 <li><a href="#unique-subjects-in-each-dataset-and-in-a-combined-dataset">Unique subjects in each dataset and in a combined dataset:</a></li>
-</ul></li>
 <li><a href="#unique-subjects-with-ecg-data-available">Unique subjects with ECG data available</a></li>
 <li><a href="#unique-subjects-in-each-dataset-with-ecg-data-who-have-diabetes">Unique subjects in each dataset with ECG data, who have diabetes</a></li>
 <li><a href="#participant-overlap-between-datasets">Participant overlap between datasets</a></li>
 </ul></li>
-<li><a href="#study-dataset-individuals-in-cded-and-cpd-with-diabetes-and-available-data-on-ecg-and-neuropathy">Study dataset: individuals in CDED and CPD with diabetes, and available data on ECG and neuropathy</a>
+</ul></li>
+<li><a href="#study-dataset-individuals-in-cded-and-cpd-with-diabetes-and-data-on-ecg-and-neuropathy">Study dataset: Individuals in CDED and CPD with diabetes, and data on ECG and neuropathy</a>
 <ul>
 <li><a href="#prevalence-of-diabetic-neuropathy">Prevalence of diabetic neuropathy</a>
 <ul>
@@ -317,9 +317,8 @@ length(unique(toupper(
   )
 )))</code></pre>
 </div>
-</div>
-<div id="unique-subjects-with-ecg-data-available" class="section level2">
-<h2>Unique subjects with ECG data available</h2>
+<div id="unique-subjects-with-ecg-data-available" class="section level3">
+<h3>Unique subjects with ECG data available</h3>
 <p>All four datasets include data on whether ECG data is missing or not. In the CDED and CPD datasets, this is described with an explicit variable. In the CVES and CVD datasets, we’re making a qualified guess based on whether that person completed the visit where ECGs were performed:</p>
 <ul>
 <li>CDED: 47</li>
@@ -352,8 +351,8 @@ length(unique(toupper(
   )
 )))</code></pre>
 </div>
-<div id="unique-subjects-in-each-dataset-with-ecg-data-who-have-diabetes" class="section level2">
-<h2>Unique subjects in each dataset with ECG data, who have diabetes</h2>
+<div id="unique-subjects-in-each-dataset-with-ecg-data-who-have-diabetes" class="section level3">
+<h3>Unique subjects in each dataset with ECG data, who have diabetes</h3>
 <p>All four datasets provide data on diabetes status. Note that these individuals may provide more than one ECG, e.g. if ECGs are performed at baseline and at follow-up:</p>
 <ul>
 <li>CDED: 22</li>
@@ -389,8 +388,8 @@ length(unique(toupper(
   )
 )))</code></pre>
 </div>
-<div id="participant-overlap-between-datasets" class="section level2">
-<h2>Participant overlap between datasets</h2>
+<div id="participant-overlap-between-datasets" class="section level3">
+<h3>Participant overlap between datasets</h3>
 <p>Overlap in participants (with ECG data and diabetes) between the datasets is limited to 8 participants in CDED, who are also present in CPD (7) and CVD (1).</p>
 <pre class="r"><code>### Overlap between cded and cpd/cves/cvd:
 # This could have been done more elegant, but bear with me)
@@ -435,8 +434,9 @@ nrow(cves_data[completed_visit_status == &quot;COMPLETED&quot; &amp;
                                                                       Group %in% c(&quot;DM&quot;, &quot;DMOH&quot;)]$`Subject ID`)])</code></pre>
 </div>
 </div>
-<div id="study-dataset-individuals-in-cded-and-cpd-with-diabetes-and-available-data-on-ecg-and-neuropathy" class="section level1">
-<h1>Study dataset: individuals in CDED and CPD with diabetes, and available data on ECG and neuropathy</h1>
+</div>
+<div id="study-dataset-individuals-in-cded-and-cpd-with-diabetes-and-data-on-ecg-and-neuropathy" class="section level1">
+<h1>Study dataset: Individuals in CDED and CPD with diabetes, and data on ECG and neuropathy</h1>
 <p>For the models, we combined CDED (data from baseline visit) and CPD datasets, excluding records in the CPD data from the 7 individuals already present in the CDED dataset and leaving a final study population of 60 individuals.</p>
 <div id="prevalence-of-diabetic-neuropathy" class="section level2">
 <h2>Prevalence of diabetic neuropathy</h2>
