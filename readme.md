@@ -10,19 +10,26 @@ output:
 
 
 
+# Preface:
+
+This document is best viewed on the [properly formatted html page](<https://htmlpreview.github.io/?https://github.com/PandaPowell/ECG_DDA/blob/master/readme.html>).
+
+Sources are contained in the [GitHub repository](<https://github.com/PandaPowell/ECG_DDA>).
+
+This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. ECG data is available for all datasets, but not on all participants, and some individuals having missing tabular data.
+
+Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
+
 # Aims and summary
 
-This project aims to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
+This project aimed to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
 
 By combining four PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvers) and was deemed inappropriate for use.
+Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
 
-## Data sources
+# Data sources
 
-### Overview
-
-GitHub link: <https://github.com/PandaPowell/ECG_DDA>
-
-This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. ECG data is available for all datasets, but not on all participants, and some individuals having missing tabular data. Throughout this document, *R* code to reproduce calculations and population flow is provided in folded chunks below the section of the text where these are mentioned.
+## Overview
 
 -   **Cerebromicrovascular Disease in Elderly with Diabetes**
 
@@ -52,7 +59,7 @@ This repository contains the following four datasets from PhysioNet with data on
     -   Folder: "/GE-71"
     -   Contents: 86 participants age 55-75 years, 37 with type 2 diabetes + 49 without.
 
-*Code to load data:*
+
 
 
 ```r
@@ -98,7 +105,7 @@ The above contents are what the documentation describes. That does not match the
 -   CVD: 86
 -   Combined: 391
 
-*Code:*
+
 
 
 ```r
@@ -127,7 +134,7 @@ length(unique(toupper(
 )))
 ```
 
-### Unique subjects with ECG data available
+## Unique subjects with ECG data available
 
 All four datasets include data on whether ECG data is missing or not. In the CDED and CPD datasets, this is described with an explicit variable. In the CVES and CVD datasets, we're making a qualified guess based on whether that person completed the visit where ECGs were performed:
 
@@ -164,7 +171,7 @@ length(unique(toupper(
 )))
 ```
 
-### Unique subjects in each dataset with ECG data, who have diabetes
+## Unique subjects in each dataset with ECG data, who have diabetes
 
 All four datasets provide data on diabetes status. Note that these individuals may provide more than one ECG, e.g. if ECGs are performed at baseline and at follow-up:
 
@@ -204,9 +211,9 @@ length(unique(toupper(
 )))
 ```
 
-### Participant overlap between datasets
+## Participant overlap between datasets
 
-Overlap in participants (with ECG data and diabetes) between the datasets is limited to 8 participants in CDED, who are also in CPD (7) and CVD (1).
+Overlap in participants (with ECG data and diabetes) between the datasets is limited to 8 participants in CDED, who are also present in CPD (7) and CVD (1).
 
 
 ```r
@@ -253,11 +260,11 @@ nrow(cves_data[completed_visit_status == "COMPLETED" &
                                                                       Group %in% c("DM", "DMOH")]$`Subject ID`)])
 ```
 
-## Study dataset: CDED and CPD
+# Study dataset: individuals in CDED and CPD with diabetes, and available data on ECG and neuropathy
 
 For the models, we combined CDED (data from baseline visit) and CPD datasets, excluding records in the CPD data from the 7 individuals already present in the CDED dataset and leaving a final study population of 60 individuals.
 
-### Prevalence of diabetic neuropathy
+## Prevalence of diabetic neuropathy
 
 The protocol states that neuropathy in the CDED dataset was diagnosed at some point using the validated symptom scale [neuropathy total symptom score-6](https://doi.org/10.1016/j.clinthera.2005.08.002), but the available variables do not correspond to this.
 
@@ -265,7 +272,9 @@ Both CDED and CPD contain questionnaire data on numbness and painful sensations 
 
 We defined diabetic neuropathy as a binary variable on the individual level as the presence of at least one of these symptoms. Individuals with missing data on all neuropathy items were excluded, while cases with missing data on only some items were interpreted as having no symptoms of these types.
 
-With this method, 24 cases of neuropathy were identified among the 60 individuals in the study population (7 of 22 individuals from CDED, 17 of 38 from CPD).
+### Final dataset
+
+Using the above method, 24 cases of neuropathy were identified among the 60 individuals in the study population (7 of 22 individuals from CDED, 17 of 38 from CPD).
 
 
 ```r
