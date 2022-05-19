@@ -415,7 +415,7 @@ study_dataset
 
 ## Filter and export ECG files:
 
-To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. ECGs from individuals with neuropathy go into the `/ecg_data/neuropathy/` folder, while those without go into the `/ecg_data/healthy/` folder.
+To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. ECGs from individuals with neuropathy go into the `/ecg_data/neuropathy/` folder, while those without go into the `/ecg_data/healthy/` folder. Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this locally.
 
 ```{r, results='hide'}
 
@@ -425,7 +425,7 @@ cded_ecg_folder <-
 
 cpd_ecg_folder <- "C:/physionet/cpd/data/ecg"
 
-# List ECT files of all healthy patients
+# List ECG files of all healthy patients
 cded_files <- list.files(cded_ecg_folder,
                          full.names = T)
 
