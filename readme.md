@@ -12,12 +12,8 @@ output:
 
 # Preface:
 This is the repository for ~~Group *Anders*~~ **Group 2** of the Data Science Spring School & Challenge, notorious Kahoot quiz winners!
+![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/quizwinners.jpg?raw=true)
 
-```r
-knitr::include_graphics(here::here("misc", "quizwinners.jpg"))
-```
-
-<img src="C:/Users/au219333/Desktop/Repos/ECG_DDA/misc/quizwinners.jpg" width="66%" />
 
 This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG_DDA/index.html).
 
@@ -664,5 +660,7 @@ Note that the ECG data files aren't tracked in Git, so you'll have to download t
 # Off to Python and Google Colab!
 
 Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy label in the folder name, ECG ID in the file name).
+
+The rest of the data processing is carried out in [Python on Google Colab](https://colab.research.google.com/), and involves reading the ECG data's waveform signals, extracting the two ECG leads and splitting them into hundreds of 10 second snippets saved as separate image files, which are then loaded into fastai DataLoader objects to train a ResNet model.
 
 **See you on the other side!**
