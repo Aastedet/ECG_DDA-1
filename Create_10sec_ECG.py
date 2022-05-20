@@ -48,7 +48,32 @@ for filename in lst3:
     axis[1, 1].set_title(record.record_name)
 
 # Plot 10 second ECGs for all individuals both first ECG signal and second
+### Signal 1 ###
+for filename in lst3:
+    
+    print(filename)
+    
+    # load a record using the 'rdrecord' function
+    record = wfdb.rdrecord("/Users/sg/Downloads/ECG_project/physionet.org/files/cded/1.0.0/Data/ECG/formatted_data/" + filename)
+    
+    sig1 = pd.DataFrame(record.p_signal)
+    
+    # record time
+    print('How many 10 second measurement intervals:', sig1.shape[0] / record.fs/ 10)
+    
+    # Define 10 sec interval via record freq times 10
+    ten = record.fs*10
+    # Create sequence of intervals
+    ten_int = np.arange(0, sig1.shape[0], ten)
+        
+    for x in range(1,len(ten_int)):
+        print(x)
+        plt.figure()
+        plt.plot(sig1.iloc[ten_int[x-1]:ten_int[x],0])
+        plt.xlabel('Time')
+        plt.savefig(filename + "_signal1_" + str(x) + "_plot.png")
 
+### Signal 2 ###
 for filename in lst3:
     
     print(filename)
