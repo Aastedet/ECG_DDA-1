@@ -1,5 +1,5 @@
 ---
-title: "Overview and flow of tabular data"
+title: "Data processing workflow in R"
 author: "Group 2 Data Science Spring School 2022"
 output:
   html_document:
@@ -17,12 +17,11 @@ knitr::opts_chunk$set(echo = TRUE)
 This is the repository for ~~Group *Anders*~~ **Group 2** of the Data Science Spring School & Challenge, notorious Kahoot quiz winners!
 ![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/quizwinners.jpg?raw=true)
 
-
 This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG_DDA/index.html).
 
 Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
 
-This repository contains the following four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for all datasets, but not on all participants, and some individuals having missing tabular data.
+This repository contains the *R* code used to process data, and also contains four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for all datasets (but not on all participants), and some individuals are missing tabular data.
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
