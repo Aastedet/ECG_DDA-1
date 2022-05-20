@@ -22,7 +22,7 @@ This repository contains the *R* code used to process data, and also contains fo
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
-Subsequent processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from this *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/1yvb8uatT4-bbjM-XX78Ld9dIZJ2UlnFd?usp=sharing) (or found in `/ecg_data/` after running the *R* script).
+The final processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from this *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/1yvb8uatT4-bbjM-XX78Ld9dIZJ2UlnFd?usp=sharing) (or found in `/ecg_data/` after running the *R* script).
 
 # Aims and summary
 
@@ -274,11 +274,62 @@ We defined diabetic neuropathy as a binary variable on the individual level as t
 
 ### Final dataset
 
-Using the above method, 24 cases of neuropathy were identified among the 60 individuals in the study population (7 of 22 individuals from CDED, 17 of 38 from CPD).
+Using the above method, 24 cases of neuropathy were identified among the 60 individuals in the study population, corresponding to a prevalence around 40% in both datasets (6 of 15 individuals from CDED, 19 of 45 from CPD).
 
 
 ```r
 ## Define nephropathy in each dataset:
+
+
+### CPD:
+# Clean column names and subject ID's:
+names(cpd_data[[2]]) <- to_snake_case(names(cpd_data[[2]]))
+cpd_data[[2]]$patient_id <- toupper(cpd_data[[2]]$patient_id)
+
+# Filtering to only id, diabetes status and the three neuropathy variables on numbness and pain :
+cpd_data_vars <-
+  cpd_data[[2]][, .(
+    patient_id,
+    dm_patient_medical_history,
+    neuropathy_autonomic_symptoms,
+    numbness_autonomic_symptoms,
+    painful_feet_autonomic_symptoms
+  )]
+
+# Recode string data to binary and NAs:
+binary_converter_function <- function(x) {
+  case_when(x == "N/A" ~ NA,
+            x == "YES" | x == "yes" | x == "Yes" ~ TRUE,
+            x == "NO" | x == "no" | x == "No" ~ FALSE)
+}
+
+# Recode string data to binary and NAs:
+mod_cols = names(cpd_data_vars)[2:5]
+cpd_data_vars[, (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
+
+# Create the simpler neuropathy outcome variable:
+# neuropathy is defined as the presence of either neuropathy, or numbness or pain in the feet:
+cpd_data_vars[, neuropathy_outcome := apply(cpd_data_vars[, 3:5], 1, function(x)
+  sum(x, na.rm = T)) >= 1]
+
+# Set individuals with completely missing data to NA:
+cpd_data_vars[, no_neuropathy_data := apply(cpd_data_vars[, 3:5], 1, function(x)
+  sum(is.na(x))) == 3]
+
+cpd_data_vars[, neuropathy_outcome := fifelse(no_neuropathy_data == T, NA, neuropathy_outcome)]
+
+
+# rename diabetes variable and dataset variable for convenience:
+names(cpd_data_vars)[2] <- "diabetes"
+cpd_data_vars[, dataset := "cpd"]
+
+# Clean CPD dataset (individuals with diabetes, and ECG/neuropathy-data):
+cpd_clean <-
+  cpd_data_vars[diabetes == T &
+                  !is.na(neuropathy_outcome) &
+                  patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
+
+
 
 ### CDED:
 #### Make column names prettier for future use and clean case inconsistency in ID variable:
@@ -295,12 +346,7 @@ cded_survey <-
     painful_feet_autonomic_symptoms
   )]
 
-# Recode string data to binary and NAs:
-binary_converter_function <- function(x) {
-  case_when(x == "N/A" ~ NA,
-            x == "YES" | x == "yes" | x == "Yes" ~ TRUE,
-            x == "NO" | x == "no" | x == "No" ~ FALSE)
-}
+
 
 # Select columns to be modified
 mod_cols = names(cded_survey)[3:5]
@@ -325,63 +371,22 @@ names(cded_survey)[3] <- "diabetes"
 # Add variable to keep track of which dataset overlapping individuals came from:
 cded_survey[, dataset := "cded"]
 
-# Clean CDED dataset (visit 2 data from individuals with diabetes and ECG/neuropathy-data):
+# Clean CDED dataset (visit 2 data from individuals with diabetes and ECG/neuropathy-data, not in CPD):
 cded_clean <-
   cded_survey[visit == 2 &
                 diabetes == T &
                 !is.na(neuropathy_outcome) &
-                patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
+                patient_id %in% toupper(cded_data[[3]][ECG == 1]$`Subject ID`) &
+                !patient_id %in% cpd_clean$patient_id, c(1, 6, 8)]
 
 
-
-### CPD:
-# Clean column names and subject ID's:
-names(cpd_data[[2]]) <- to_snake_case(names(cpd_data[[2]]))
-cpd_data[[2]]$patient_id <- toupper(cpd_data[[2]]$patient_id)
-
-# Filtering to only id, diabetes status and the three neuropathy variables on numbness and pain :
-cpd_data_vars <-
-  cpd_data[[2]][, .(
-    patient_id,
-    dm_patient_medical_history,
-    neuropathy_autonomic_symptoms,
-    numbness_autonomic_symptoms,
-    painful_feet_autonomic_symptoms
-  )]
-
-
-
-# Recode string data to binary and NAs:
-mod_cols = names(cpd_data_vars)[2:5]
-cpd_data_vars[, (mod_cols) := lapply(.SD, binary_converter_function), .SDcols = mod_cols]
-
-# Create the simpler neuropathy outcome variable:
-# neuropathy is defined as the presence of either neuropathy, or numbness or pain in the feet:
-cpd_data_vars[, neuropathy_outcome := apply(cpd_data_vars[, 3:5], 1, function(x)
-  sum(x, na.rm = T)) >= 1]
-
-# Set individuals with completely missing data to NA:
-cpd_data_vars[, no_neuropathy_data := apply(cpd_data_vars[, 3:5], 1, function(x)
-  sum(is.na(x))) == 3]
-
-cpd_data_vars[, neuropathy_outcome := fifelse(no_neuropathy_data == T, NA, neuropathy_outcome)]
-
-
-# rename diabetes variable and dataset variable for convenience:
-names(cpd_data_vars)[2] <- "diabetes"
-cpd_data_vars[, dataset := "cpd"]
-
-# Clean CPD dataset (individuals not in CDED, with diabetes, and ECG/neuropathy-data):
-cpd_clean <-
-  cpd_data_vars[!patient_id %in% cded_clean$patient_id &
-                  diabetes == T &
-                  !is.na(neuropathy_outcome) &
-                  patient_id %in% toupper(cpd_data[[4]][ECG == 1]$`Subject ID`), c(1, 6, 8)]
 
 # Merge to one dataset and count neuropathy cases:
 neuropathy_final <- rbind(cded_clean, cpd_clean)
 
+nrow(neuropathy_final[dataset == "cded"])
 nrow(neuropathy_final[dataset == "cded" & neuropathy_outcome == T])
+nrow(neuropathy_final[dataset == "cpd"])
 nrow(neuropathy_final[dataset == "cpd" & neuropathy_outcome == T])
 ```
 
@@ -412,9 +417,9 @@ summary(study_dataset)
 
 ```
 ##   patient_id        dataset   neuropathy_outcome
-##  Length:60          cded:22   Mode :logical     
-##  Class :character   cpd :38   FALSE:36          
-##  Mode  :character             TRUE :24
+##  Length:60          cded:15   Mode :logical     
+##  Class :character   cpd :45   FALSE:35          
+##  Mode  :character             TRUE :25
 ```
 
 ```r
@@ -425,61 +430,61 @@ study_dataset
 ##     patient_id dataset neuropathy_outcome
 ##  1:   S0105ECG    cded              FALSE
 ##  2:   S0264ECG    cded               TRUE
-##  3:   S0296ECG    cded              FALSE
-##  4:   S0301ECG    cded              FALSE
-##  5:   S0308ECG    cded               TRUE
-##  6:   S0314ECG    cded              FALSE
-##  7:   S0318ECG    cded              FALSE
-##  8:   S0372ECG    cded              FALSE
-##  9:   S0430ECG    cded              FALSE
-## 10:   S0513ECG    cded              FALSE
-## 11:   S0536ECG    cded              FALSE
-## 12:   S0539ECG    cded              FALSE
-## 13:   S0540ECG    cded              FALSE
-## 14:   S0543ECG    cded               TRUE
-## 15:   S0552ECG    cded               TRUE
-## 16:   S0554ECG    cded              FALSE
-## 17:   S0555ECG    cded               TRUE
-## 18:   S0561ECG    cded              FALSE
-## 19:   S0562ECG    cded              FALSE
-## 20:   S0582ECG    cded               TRUE
-## 21:   S0591ECG    cded              FALSE
-## 22:   S0610ECG    cded               TRUE
-## 23:   S0250ECG     cpd              FALSE
-## 24:   S0256ECG     cpd              FALSE
-## 25:   S0273ECG     cpd               TRUE
-## 26:   S0282ECG     cpd              FALSE
-## 27:   S0287ECG     cpd              FALSE
-## 28:   S0288ECG     cpd              FALSE
-## 29:   S0292ECG     cpd              FALSE
-## 30:   S0300ECG     cpd               TRUE
-## 31:   S0304ECG     cpd              FALSE
-## 32:   S0310ECG     cpd               TRUE
-## 33:   S0312ECG     cpd              FALSE
-## 34:   S0315ECG     cpd               TRUE
-## 35:   S0316ECG     cpd              FALSE
-## 36:   S0317ECG     cpd               TRUE
-## 37:   S0326ECG     cpd               TRUE
-## 38:   S0327ECG     cpd               TRUE
-## 39:   S0339ECG     cpd              FALSE
-## 40:   S0342ECG     cpd              FALSE
-## 41:   S0349ECG     cpd               TRUE
-## 42:   S0365ECG     cpd               TRUE
-## 43:   S0366ECG     cpd              FALSE
-## 44:   S0381ECG     cpd               TRUE
-## 45:   S0382ECG     cpd               TRUE
-## 46:   S0390ECG     cpd              FALSE
-## 47:   S0392ECG     cpd               TRUE
-## 48:   S0398ECG     cpd              FALSE
-## 49:   S0403ECG     cpd              FALSE
-## 50:   S0405ECG     cpd               TRUE
-## 51:   S0406ECG     cpd               TRUE
-## 52:   S0409ECG     cpd              FALSE
-## 53:   S0416ECG     cpd              FALSE
-## 54:   S0420ECG     cpd               TRUE
-## 55:   S0423ECG     cpd              FALSE
-## 56:   S0424ECG     cpd              FALSE
-## 57:   S0426ECG     cpd              FALSE
+##  3:   S0513ECG    cded              FALSE
+##  4:   S0536ECG    cded              FALSE
+##  5:   S0539ECG    cded              FALSE
+##  6:   S0540ECG    cded              FALSE
+##  7:   S0543ECG    cded               TRUE
+##  8:   S0552ECG    cded               TRUE
+##  9:   S0554ECG    cded              FALSE
+## 10:   S0555ECG    cded               TRUE
+## 11:   S0561ECG    cded              FALSE
+## 12:   S0562ECG    cded              FALSE
+## 13:   S0582ECG    cded               TRUE
+## 14:   S0591ECG    cded              FALSE
+## 15:   S0610ECG    cded               TRUE
+## 16:   S0250ECG     cpd              FALSE
+## 17:   S0256ECG     cpd              FALSE
+## 18:   S0273ECG     cpd               TRUE
+## 19:   S0282ECG     cpd              FALSE
+## 20:   S0287ECG     cpd              FALSE
+## 21:   S0288ECG     cpd              FALSE
+## 22:   S0292ECG     cpd              FALSE
+## 23:   S0296ECG     cpd              FALSE
+## 24:   S0300ECG     cpd               TRUE
+## 25:   S0301ECG     cpd               TRUE
+## 26:   S0304ECG     cpd              FALSE
+## 27:   S0308ECG     cpd               TRUE
+## 28:   S0310ECG     cpd               TRUE
+## 29:   S0312ECG     cpd              FALSE
+## 30:   S0314ECG     cpd              FALSE
+## 31:   S0315ECG     cpd               TRUE
+## 32:   S0316ECG     cpd              FALSE
+## 33:   S0317ECG     cpd               TRUE
+## 34:   S0318ECG     cpd              FALSE
+## 35:   S0326ECG     cpd               TRUE
+## 36:   S0327ECG     cpd               TRUE
+## 37:   S0339ECG     cpd              FALSE
+## 38:   S0342ECG     cpd              FALSE
+## 39:   S0349ECG     cpd               TRUE
+## 40:   S0365ECG     cpd               TRUE
+## 41:   S0366ECG     cpd              FALSE
+## 42:   S0372ECG     cpd              FALSE
+## 43:   S0381ECG     cpd               TRUE
+## 44:   S0382ECG     cpd               TRUE
+## 45:   S0390ECG     cpd              FALSE
+## 46:   S0392ECG     cpd               TRUE
+## 47:   S0398ECG     cpd              FALSE
+## 48:   S0403ECG     cpd              FALSE
+## 49:   S0405ECG     cpd               TRUE
+## 50:   S0406ECG     cpd               TRUE
+## 51:   S0409ECG     cpd              FALSE
+## 52:   S0416ECG     cpd              FALSE
+## 53:   S0420ECG     cpd               TRUE
+## 54:   S0423ECG     cpd              FALSE
+## 55:   S0424ECG     cpd              FALSE
+## 56:   S0426ECG     cpd              FALSE
+## 57:   S0430ECG     cpd              FALSE
 ## 58:   S0432ECG     cpd               TRUE
 ## 59:   S0433ECG     cpd              FALSE
 ## 60:   S0434ECG     cpd               TRUE
@@ -488,9 +493,9 @@ study_dataset
 
 ## Filter, split and export ECG files:
 
-To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. We'll also split the ECGs into training and validation parent folders, so  ECGs from the same individual cannot be present in both training a validation datasets (we'll be splitting the ECGs into small snippets later, so each individual will contribute multiple ECGs). Otherwise we risk [data leakage](https://en.wikipedia.org/wiki/Leakage_(machine_learning)) between the training and validation datasets, and the model might learn to identify *individuals*, rather than signals of *neuropathy*, which would erode model performance on external data. A somewhat famous example of this mistake being [Andrew Ng's random split of 112,120 x-ray images from 30,805 individuals](https://twitter.com/nizkroberts/status/931121395748270080) which was subsequently corrected.
+To save space and computation time, we filter the ECGs to only the ones we need, and export them to different folders for labelling purposes. We'll also split the ECGs into training and validation parent folders, so  ECGs from the same experiment or individual cannot be present in both training a validation datasets (we'll be splitting the ECGs into small snippets later, so each individual will contribute multiple ECGs). Otherwise we risk [data leakage](https://en.wikipedia.org/wiki/Leakage_(machine_learning)) between the training and validation datasets, and the model might learn to identify *individuals* or *experiment*, rather than signals of *neuropathy*, which would erode model performance on external data. A somewhat famous example of this mistake being [Andrew Ng's random split of 112,120 x-ray images from 30,805 individuals](https://twitter.com/nizkroberts/status/931121395748270080) which was subsequently corrected.
 
-We'll use a random sample of roughly 20% of individuals from each group into the validation set, to ensure that both CDED and CPD ECG from healthy and neuropathy patients are proportionally distributed across training and validation sets. Due to the limited data available, we do not set aside a test dataset.
+Fortunately, the CPD and CDED datasets are similarly balanced in terms of neuropathy prevalence, and their relative sizes are suitable for use as a training/validation split (the CDED participants make up 25% of the study population). Due to the limited data available, we do not set aside a test dataset, but expect performance on external datasets to be relatively stable due to the different sources of training and validation set.
 
 
 ```r
@@ -500,21 +505,8 @@ cded_ecg_folder <-
 
 cpd_ecg_folder <- "C:/physionet/cpd/data/ecg"
 
-# Run bash script to remove year from ECG header file, so they can actually be opened (bug or feature?)
 
-system("custom_script.sh arg1 arg2")
-```
-
-```
-## Warning in system("custom_script.sh arg1 arg2"): 'custom_script.sh' not found
-```
-
-```
-## [1] 127
-```
-
-```r
-# List ECG files of all healthy patients
+# List ECG files of all patients in study population
 cded_files <- list.files(cded_ecg_folder,
                          full.names = T)
 
@@ -541,48 +533,9 @@ cpd_healthy <-
 cpd_neuropathy <-
   cpd_files[str_sub(cpd_files, -12, -5) %in% study_dataset[dataset == "cpd" &
                                                              neuropathy_outcome == TRUE]$patient_id]
-
-# Sample 1 in 5 to validation datasets:
-# Set seed for reproducibility:
-set.seed(2)
-
-valid_cded_healthy <-
-  cded_healthy[str_sub(cded_healthy,-12,-5) %in% sample(
-    study_dataset[dataset == "cded" &
-                    neuropathy_outcome == FALSE]$patient_id,
-    0.20 * nrow(study_dataset[dataset == "cded" &
-                                neuropathy_outcome == FALSE]))]
-
-valid_cded_neuropathy <-
-  cded_neuropathy[str_sub(cded_neuropathy,-12,-5) %in% sample(
-    study_dataset[dataset == "cded" &
-                    neuropathy_outcome == TRUE]$patient_id,
-    0.20 * nrow(study_dataset[dataset == "cded" &
-                                neuropathy_outcome == TRUE]))]
-
-valid_cpd_healthy <-
-  cpd_healthy[str_sub(cpd_healthy,-12,-5) %in% sample(
-    study_dataset[dataset == "cpd" &
-                    neuropathy_outcome == FALSE]$patient_id,
-    0.20 * nrow(study_dataset[dataset == "cpd" &
-                                neuropathy_outcome == FALSE]))]
-
-valid_cpd_neuropathy <-
-  cpd_neuropathy[str_sub(cpd_neuropathy,-12,-5) %in% sample(
-    study_dataset[dataset == "cpd" &
-                    neuropathy_outcome == TRUE]$patient_id,
-    0.20 * nrow(study_dataset[dataset == "cpd" &
-                                neuropathy_outcome == TRUE]))]
-
-# And remove these individuals from the training set:
-
-train_cded_healthy <- cded_healthy[!cded_healthy %in% valid_cded_healthy]
-train_cded_neuropathy <- cded_neuropathy[!cded_neuropathy %in% valid_cded_neuropathy]
-train_cpd_healthy <- cpd_healthy[!cpd_healthy %in% valid_cpd_healthy]
-train_cpd_neuropathy <- cpd_neuropathy[!cpd_neuropathy %in% valid_cpd_neuropathy]
 ```
 
-In this fashion, we end up with a training set containing 49 individuals, and a validation set containing 11 individuals.
+In this fashion, we end up with a training set containing 45 individuals, and a validation set containing 15 individuals.
 
 Training set:
 
@@ -590,10 +543,8 @@ Training set:
 ```r
 unique(str_sub(
   c(
-    train_cded_healthy,
-    train_cded_neuropathy,
-    train_cpd_healthy,
-    train_cpd_neuropathy
+    cpd_healthy,
+    cpd_neuropathy
   ),
   -12,
   -5
@@ -601,15 +552,14 @@ unique(str_sub(
 ```
 
 ```
-##  [1] "S0105ECG" "S0296ECG" "S0301ECG" "S0314ECG" "S0430ECG" "S0513ECG"
-##  [7] "S0536ECG" "S0539ECG" "S0540ECG" "S0554ECG" "S0561ECG" "S0591ECG"
-## [13] "S0308ECG" "S0543ECG" "S0552ECG" "S0555ECG" "S0582ECG" "S0610ECG"
-## [19] "S0250ECG" "S0256ECG" "S0282ECG" "S0287ECG" "S0288ECG" "S0292ECG"
-## [25] "S0304ECG" "S0312ECG" "S0339ECG" "S0342ECG" "S0390ECG" "S0398ECG"
-## [31] "S0403ECG" "S0409ECG" "S0424ECG" "S0426ECG" "S0433ECG" "S0300ECG"
-## [37] "S0315ECG" "S0317ECG" "S0326ECG" "S0327ECG" "S0349ECG" "S0365ECG"
-## [43] "S0381ECG" "S0392ECG" "S0405ECG" "S0406ECG" "S0420ECG" "S0432ECG"
-## [49] "S0434ECG"
+##  [1] "S0250ECG" "S0256ECG" "S0282ECG" "S0287ECG" "S0288ECG" "S0292ECG"
+##  [7] "S0296ECG" "S0304ECG" "S0312ECG" "S0314ECG" "S0316ECG" "S0318ECG"
+## [13] "S0339ECG" "S0342ECG" "S0366ECG" "S0372ECG" "S0390ECG" "S0398ECG"
+## [19] "S0403ECG" "S0409ECG" "S0416ECG" "S0423ECG" "S0424ECG" "S0426ECG"
+## [25] "S0430ECG" "S0433ECG" "S0273ECG" "S0300ECG" "S0301ECG" "S0308ECG"
+## [31] "S0310ECG" "S0315ECG" "S0317ECG" "S0326ECG" "S0327ECG" "S0349ECG"
+## [37] "S0365ECG" "S0381ECG" "S0382ECG" "S0392ECG" "S0405ECG" "S0406ECG"
+## [43] "S0420ECG" "S0432ECG" "S0434ECG"
 ```
 
 Validation set:
@@ -618,10 +568,8 @@ Validation set:
 ```r
 unique(str_sub(
   c(
-    valid_cded_healthy,
-    valid_cded_neuropathy,
-    valid_cpd_healthy,
-    valid_cpd_neuropathy
+    cded_healthy,
+    cded_neuropathy
   ),
   -12,
   -5
@@ -629,11 +577,12 @@ unique(str_sub(
 ```
 
 ```
-##  [1] "S0318ECG" "S0372ECG" "S0562ECG" "S0264ECG" "S0316ECG" "S0366ECG"
-##  [7] "S0416ECG" "S0423ECG" "S0273ECG" "S0310ECG" "S0382ECG"
+##  [1] "S0105ECG" "S0513ECG" "S0536ECG" "S0539ECG" "S0540ECG" "S0554ECG"
+##  [7] "S0561ECG" "S0562ECG" "S0591ECG" "S0264ECG" "S0543ECG" "S0552ECG"
+## [13] "S0555ECG" "S0582ECG" "S0610ECG"
 ```
 
-Training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_data/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_data/valid/neuropathy/` and `/ecg_data/valid/healthy/` folders. Like so:
+TFor labeling purposes, training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_data/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_data/valid/neuropathy/` and `/ecg_data/valid/healthy/` folders. Like so:
 
 ```
 /ecg_data
@@ -652,22 +601,19 @@ Training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/n
 
 # Training set:
 # Healthy:
-file.copy(from = train_cded_healthy, to = here("ecg_data", "train", "healthy"))
-file.copy(from = train_cpd_healthy, to = here("ecg_data", "train", "healthy"))
+file.copy(from = cpd_healthy, to = here("ecg_data", "train", "healthy"))
 
 # Neuropathy:
-file.copy(from = train_cded_neuropathy, to = here("ecg_data", "train", "neuropathy"))
-file.copy(from = train_cpd_neuropathy, to = here("ecg_data", "train", "neuropathy"))
+file.copy(from = cpd_neuropathy, to = here("ecg_data", "train", "neuropathy"))
 
 
 # Validation set:
 # Healthy:
-file.copy(from = valid_cded_healthy, to = here("ecg_data", "valid", "healthy"))
-file.copy(from = valid_cpd_healthy, to = here("ecg_data", "valid", "healthy"))
+file.copy(from = cded_healthy, to = here("ecg_data", "valid", "healthy"))
+
 
 # Neuropathy:
-file.copy(from = valid_cded_neuropathy, to = here("ecg_data", "valid", "neuropathy"))
-file.copy(from = valid_cpd_neuropathy, to = here("ecg_data", "valid", "neuropathy"))
+file.copy(from = cded_neuropathy, to = here("ecg_data", "valid", "neuropathy"))
 ```
 
 Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this.
