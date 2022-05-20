@@ -22,6 +22,8 @@ This repository contains the *R* code used to process data, and also contains fo
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
+Subsequent processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from this *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/1yvb8uatT4-bbjM-XX78Ld9dIZJ2UlnFd?usp=sharing) (or found in `/ecg_data/` after running the *R* script).
+
 # Aims and summary
 
 This project aimed to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
@@ -498,6 +500,20 @@ cded_ecg_folder <-
 
 cpd_ecg_folder <- "C:/physionet/cpd/data/ecg"
 
+# Run bash script to remove year from ECG header file, so they can actually be opened (bug or feature?)
+
+system("custom_script.sh arg1 arg2")
+```
+
+```
+## Warning in system("custom_script.sh arg1 arg2"): 'custom_script.sh' not found
+```
+
+```
+## [1] 127
+```
+
+```r
 # List ECG files of all healthy patients
 cded_files <- list.files(cded_ecg_folder,
                          full.names = T)

@@ -219,6 +219,7 @@ pre code {
 <p>Sources are contained in the <a href="https://github.com/PandaPowell/ECG_DDA">GitHub repository</a>.</p>
 <p>This repository contains the <em>R</em> code used to process data, and also contains four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for all datasets (but not on all participants), and some individuals are missing tabular data.</p>
 <p>Throughout this document, <em>R</em> code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.</p>
+<p>Subsequent processing of ECG data and neural network training is performed using Python in a <a href="https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing">Google Colab Notebook</a>. The filtered ECG data output from this <em>R</em> script and used in the notebook can be found on <a href="https://drive.google.com/drive/folders/1yvb8uatT4-bbjM-XX78Ld9dIZJ2UlnFd?usp=sharing">Google Drive</a> (or found in <code>/ecg_data/</code> after running the <em>R</em> script).</p>
 </div>
 <div id="aims-and-summary" class="section level1">
 <h1>Aims and summary</h1>
@@ -659,7 +660,12 @@ cded_ecg_folder &lt;-
 
 cpd_ecg_folder &lt;- &quot;C:/physionet/cpd/data/ecg&quot;
 
-# List ECG files of all healthy patients
+# Run bash script to remove year from ECG header file, so they can actually be opened (bug or feature?)
+
+system(&quot;custom_script.sh arg1 arg2&quot;)</code></pre>
+<pre><code>## Warning in system(&quot;custom_script.sh arg1 arg2&quot;): &#39;custom_script.sh&#39; not found</code></pre>
+<pre><code>## [1] 127</code></pre>
+<pre class="r"><code># List ECG files of all healthy patients
 cded_files &lt;- list.files(cded_ecg_folder,
                          full.names = T)
 
