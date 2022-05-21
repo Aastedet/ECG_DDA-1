@@ -219,7 +219,7 @@ pre code {
 <p>Sources are contained in the <a href="https://github.com/PandaPowell/ECG_DDA">GitHub repository</a>.</p>
 <p>This repository contains the <em>R</em> code used to process data, and also contains four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for all datasets (but not on all participants), and some individuals are missing tabular data.</p>
 <p>Throughout this document, <em>R</em> code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.</p>
-<p>The final processing of ECG data and neural network training is performed using Python in a <a href="https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing">Google Colab Notebook</a>. The filtered ECG data output from this <em>R</em> script and used in the notebook can be found on <a href="https://drive.google.com/drive/folders/1yvb8uatT4-bbjM-XX78Ld9dIZJ2UlnFd?usp=sharing">Google Drive</a> (or found in <code>/ecg_data/</code> after running the <em>R</em> script).</p>
+<p>The final processing of ECG data and neural network training is performed using Python in a <a href="https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing">Google Colab Notebook</a>. The filtered ECG data output from this <em>R</em> script and used in the notebook can be found on <a href="https://drive.google.com/drive/folders/16lSkIlWun5JEaKT9FhwvAWZ6SFx9X9-5?usp=sharing">Google Drive</a> (or found in <code>/ecg_data/</code> after running the <em>R</em> script).</p>
 </div>
 <div id="aims-and-summary" class="section level1">
 <h1>Aims and summary</h1>
@@ -723,7 +723,26 @@ cpd_neuropathy &lt;-
 <pre><code>##  [1] &quot;S0105ECG&quot; &quot;S0513ECG&quot; &quot;S0536ECG&quot; &quot;S0539ECG&quot; &quot;S0540ECG&quot; &quot;S0554ECG&quot;
 ##  [7] &quot;S0561ECG&quot; &quot;S0562ECG&quot; &quot;S0591ECG&quot; &quot;S0264ECG&quot; &quot;S0543ECG&quot; &quot;S0552ECG&quot;
 ## [13] &quot;S0555ECG&quot; &quot;S0582ECG&quot; &quot;S0610ECG&quot;</code></pre>
-<p>TFor labeling purposes, training set ECGs from individuals with neuropathy go to the <code>/ecg_data/train/neuropathy/</code> folder, and those without neuropathy go to the <code>/ecg_data/train/healthy/</code> folder. Conversely, validation set ECGs go to their respective <code>/ecg_data/valid/neuropathy/</code> and <code>/ecg_data/valid/healthy/</code> folders. Like so:</p>
+<pre class="r"><code>cded_healthy</code></pre>
+<pre><code>##  [1] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0105ECG.dat&quot;
+##  [2] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0105ECG.hea&quot;
+##  [3] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0513ECG.dat&quot;
+##  [4] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0513ECG.hea&quot;
+##  [5] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0536ECG.dat&quot;
+##  [6] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0536ECG.hea&quot;
+##  [7] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0539ECG.dat&quot;
+##  [8] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0539ECG.hea&quot;
+##  [9] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0540ECG.dat&quot;
+## [10] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0540ECG.hea&quot;
+## [11] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0554ECG.dat&quot;
+## [12] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0554ECG.hea&quot;
+## [13] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0561ECG.dat&quot;
+## [14] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0561ECG.hea&quot;
+## [15] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0562ECG.dat&quot;
+## [16] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0562ECG.hea&quot;
+## [17] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0591ECG.dat&quot;
+## [18] &quot;C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0591ECG.hea&quot;</code></pre>
+<p>For labeling purposes, training set ECGs from individuals with neuropathy go to the <code>/ecg_data/train/neuropathy/</code> folder, and those without neuropathy go to the <code>/ecg_data/train/healthy/</code> folder. Conversely, validation set ECGs go to their respective <code>/ecg_data/valid/neuropathy/</code> and <code>/ecg_data/valid/healthy/</code> folders. Like so:</p>
 <pre><code>/ecg_data
 ├── /train
 │   ├── /healthy/

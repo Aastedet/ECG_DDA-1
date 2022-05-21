@@ -25,7 +25,7 @@ This repository contains the *R* code used to process data, and also contains fo
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
-The final processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from this *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/1yvb8uatT4-bbjM-XX78Ld9dIZJ2UlnFd?usp=sharing) (or found in `/ecg_data/` after running the *R* script).
+The final processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from this *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/16lSkIlWun5JEaKT9FhwvAWZ6SFx9X9-5?usp=sharing) (or found in `/ecg_data/` after running the *R* script).
 
 # Aims and summary
 
@@ -495,10 +495,10 @@ unique(str_sub(
   -12,
   -5
 ))
-
+cded_healthy
 ```
 
-TFor labeling purposes, training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_data/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_data/valid/neuropathy/` and `/ecg_data/valid/healthy/` folders. Like so:
+For labeling purposes, training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_data/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_data/valid/neuropathy/` and `/ecg_data/valid/healthy/` folders. Like so:
 
 ```
 /ecg_data
