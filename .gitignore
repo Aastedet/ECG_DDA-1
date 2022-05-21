@@ -2,4 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-/ecg_data
+/ecg_wfdb
+/ecg_img
