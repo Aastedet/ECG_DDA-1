@@ -65,8 +65,16 @@ for filename in lst3:
     ten = record.fs*10
     # Create sequence of intervals
     ten_int = np.arange(0, sig1.shape[0], ten)
+    
+    # Limit to first 300
+    if (len(ten_int) > 300):
+        len_sig = 300
+    else:
+        len_sig = len(ten_int)
         
-    for x in range(1,len(ten_int)):
+    print(len_sig)
+        
+    for x in range(1,len_sig):
         print(x)
         plt.figure()
         plt.plot(sig1.iloc[ten_int[x-1]:ten_int[x],0])
@@ -90,8 +98,16 @@ for filename in lst3:
     ten = record.fs*10
     # Create sequence of intervals
     ten_int = np.arange(0, sig1.shape[0], ten)
+    
+    # Limit to first 300
+    if (len(ten_int) > 300):
+        len_sig = 300
+    else:
+        len_sig = len(ten_int)
         
-    for x in range(1,len(ten_int)):
+    print(len_sig)
+        
+    for x in range(1,len_sig):
         print(x)
         plt.figure()
         plt.plot(sig1.iloc[ten_int[x-1]:ten_int[x],1])
