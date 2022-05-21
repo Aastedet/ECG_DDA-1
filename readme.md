@@ -22,7 +22,7 @@ This repository contains the *R* code used to process data, and also contains fo
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
-The final processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from the `readme.Rmd`  *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/10u5eoXebhNVPny4crHKRGPHV5TNwcywW?usp=sharing) (or locally in `/ecg_data/` after running the `readme.Rmd` script).
+The final processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from the `readme.Rmd`  *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/17AX33KuzP2nZwCQ9sWErY_0bSGI-ON1R?usp=sharing) (or locally in `/ecg_data/` after running the `readme.Rmd` script).
 
 # Aims and summary
 
