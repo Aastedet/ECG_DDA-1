@@ -19,21 +19,24 @@ This is the repository for ~~Group *Anders*~~ **Group 2** of the Data Science Sp
 
 This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG_DDA/index.html).
 
-Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
+This project is fully open-source from raw data to output and presentation, so please join and help us improve the model. Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
 
-A questionable model unfit for deployment is deployed [here](https://mybinder.org/v2/gh/Aastedet/ecg_neuropathy_app/HEAD?labpath=%2Fvoila%2Frender%2Fecg_neuropathy_app.ipynb)
+A questionable model unfit for deployment is deployed [here](https://mybinder.org/v2/gh/Aastedet/ecg_neuropathy_app/HEAD?labpath=%2Fvoila%2Frender%2Fecg_neuropathy_app.ipynb).
 
 This repository contains the *R* code used to process data, and also contains four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for download on PhysioNet for all datasets, although a substantial proportion of participants are missing ECG or tabular data.
 
 Throughout this document, *R* code to reproduce data processing and population flow is provided in folded chunks below the section of the text where these are mentioned.
 
-The final processing of ECG data and neural network training is performed using Python in a [Google Colab Notebook](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing). The filtered ECG data output from the `readme.Rmd`  *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/17AX33KuzP2nZwCQ9sWErY_0bSGI-ON1R?usp=sharing) (or locally in `/ecg_data/` after running the `readme.Rmd` script).
+The final processing of ECG data and neural network training is performed using Python in a Google Colab Notebook [here](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing) and [here](https://colab.research.google.com/drive/1_b-j3hDzYTYbbqGdyUnoaGiPZyRMbcJE?usp=sharing). The filtered ECG data output from the `readme.Rmd`  *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/17AX33KuzP2nZwCQ9sWErY_0bSGI-ON1R?usp=sharing) (or locally in `/ecg_data/` after running the `readme.Rmd` script).
 
 # Aims and summary
 
 This project aimed to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
 
 By combining four PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvers) and was deemed inappropriate for use. Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
+
+Data augmentation was mainly done in the way of splitting the ECG signals into many images of 10-second snippets, in addition to transforming operations (random resizing and cropping, etc.). A ResNet18 computer vision model was transferred and trained on these data, but performance was poor, and very prone to over-fitting.
+Particularly challenging was the high level of noise in the ECG data, and data leakage on the individual and source dataset level. The latter was overcome by careful splitting into training and validation datasets, but the former was not addressed. More work to clean the ECG data may enable better performance.
 
 # Data sources
 
@@ -593,6 +596,6 @@ Note that the ECG data files aren't tracked in Git, so you'll have to download t
 
 Now, we have no further use of the tabular data file, since all the information needed to run the model is contained in the filename and path of the ECG data itself at this point (neuropathy label in the folder name, ECG ID in the file name).
 
-The rest of the data processing is carried out in [Python on Google Colab](https://colab.research.google.com/), and involves reading the ECG data's waveform signals, extracting the two ECG leads and splitting them into hundreds of 10 second snippets saved as separate image files, which are then loaded into fastai DataLoader objects to train a ResNet model.
+The rest of the data processing is carried out in [Python on Google Colab](https://colab.research.google.com/) ([preprocessing here](https://drive.google.com/file/d/1L9HoCpwvcAg84XY1d-mqiYqTXxO004uY/view?usp=sharing), [transfer learning here](https://colab.research.google.com/drive/1_b-j3hDzYTYbbqGdyUnoaGiPZyRMbcJE?usp=sharing) , and involves reading the ECG data's waveform signals, extracting the two ECG leads and splitting them into hundreds of 10 second snippets saved as separate image files, which are then loaded into fastai DataLoader objects to train a ResNet model.
 
 **See you on the other side!**
