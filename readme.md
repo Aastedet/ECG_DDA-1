@@ -607,10 +607,39 @@ cded_healthy
 ## [18] "C:/physionet/cded/cerebromicrovascular-disease-in-elderly-with-diabetes-1.0.0/Data/ECG/S0591ECG.hea"
 ```
 
-For labeling purposes, training  set ECGs from individuals with neuropathy go to the `/ecg_data/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_data/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_data/valid/neuropathy/` and `/ecg_data/valid/healthy/` folders. Like so:
+
+Since the proportion of neuropathy is balanced between the two datasets, we also train a model on a random 20/80 split for comparison (due to the balanced proportions, an increased performance after training on both datasets should not be due to data leakage):
+
+
+```r
+# Alternative random split:
+# Sample 1 in 5 of all participants to validation dataset:
+all_participant_files <- c(cded_healthy, cded_neuropathy, cpd_healthy, cpd_neuropathy)
+
+
+all_healthy <- all_participant_files[str_sub(all_participant_files, -12, -5) %in% study_dataset[neuropathy_outcome == FALSE]$patient_id]
+
+all_neuropathy <- all_participant_files[str_sub(all_participant_files, -12, -5) %in% study_dataset[neuropathy_outcome == TRUE]$patient_id]
+# Set seed for reproducibility:
+
+set.seed(2)
+
+valid_healthy <- all_participant_files[str_sub(all_participant_files, -12, -5) %in% sample(study_dataset[neuropathy_outcome == FALSE]$patient_id, 0.20 * nrow(study_dataset[neuropathy_outcome == FALSE]))]
+
+valid_neuropathy <- all_participant_files[str_sub(all_participant_files, -12, -5) %in% sample(study_dataset[neuropathy_outcome == TRUE]$patient_id, 0.20 * nrow(study_dataset[neuropathy_outcome == TRUE]))]
+
+# And remove the validation individuals from the training set:
+train_healthy <- all_healthy[!all_healthy %in% valid_healthy]
+
+
+train_neuropathy <- all_neuropathy[!all_neuropathy %in% valid_neuropathy]
+```
+
+
+For labeling purposes, training  set ECGs from individuals with neuropathy go to the `/ecg_wfdb/train/neuropathy/` folder, and those without neuropathy go to the `/ecg_wfdb/train/healthy/` folder. Conversely, validation set ECGs go to their respective `/ecg_wfdb/valid/neuropathy/` and `/ecg_wfdb/valid/healthy/` folders. Like so:
 
 ```
-/ecg_data
+/ecg_wfdb
 ├── /train
 │   ├── /healthy/
 │   └── /neuropathy/
@@ -624,21 +653,44 @@ For labeling purposes, training  set ECGs from individuals with neuropathy go to
 ```r
 # Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
 
+# Split by source dataset:
+
 # Training set:
 # Healthy:
-file.copy(from = cpd_healthy, to = here("ecg_data", "train", "healthy"))
+file.copy(from = cpd_healthy, to = here("ecg_wfdb", "train", "healthy"))
 
 # Neuropathy:
-file.copy(from = cpd_neuropathy, to = here("ecg_data", "train", "neuropathy"))
+file.copy(from = cpd_neuropathy, to = here("ecg_wfdb", "train", "neuropathy"))
 
 
 # Validation set:
 # Healthy:
-file.copy(from = cded_healthy, to = here("ecg_data", "valid", "healthy"))
+file.copy(from = cded_healthy, to = here("ecg_wfdb", "valid", "healthy"))
 
 
 # Neuropathy:
-file.copy(from = cded_neuropathy, to = here("ecg_data", "valid", "neuropathy"))
+file.copy(from = cded_neuropathy, to = here("ecg_wfdb", "valid", "neuropathy"))
+
+
+
+
+# Random split:
+
+# Training set:
+# Healthy:
+file.copy(from = train_healthy, to = here("ecg_wfdb_randomsplit", "train", "healthy"))
+
+# Neuropathy:
+file.copy(from = train_neuropathy, to = here("ecg_wfdb_randomsplit", "train", "neuropathy"))
+
+
+# Validation set:
+# Healthy:
+file.copy(from = valid_healthy, to = here("ecg_wfdb_randomsplit", "valid", "healthy"))
+
+
+# Neuropathy:
+file.copy(from = valid_neuropathy, to = here("ecg_wfdb_randomsplit", "valid", "neuropathy"))
 ```
 
 Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this.

@@ -4,3 +4,5 @@
 .Ruserdata
 /ecg_wfdb
 /ecg_img
+/ecg_wfdb_randomsplit
+/ecg_img_randomsplit
