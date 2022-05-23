@@ -18,7 +18,7 @@ This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG
 
 This project is fully open-source from raw data to output and presentation, so please join and help us improve the model. Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
 
-A questionable model unfit for deployment is deployed [here](https://mybinder.org/v2/gh/Aastedet/ecg_neuropathy_app/HEAD?labpath=%2Fvoila%2Frender%2Fecg_neuropathy_app.ipynb).
+A questionable model unfit for deployment is deployed [here](https://mybinder.org/v2/gh/Aastedet/ecg_neuropathy_app/main?urlpath=%2Fvoila%2Frender%2Fecg_neuropathy_app.ipynb).
 
 This repository contains the *R* code used to process data, and also contains four datasets from PhysioNet with data on diabetes and neuropathy status. While ECG data is not contained in the repository, it is available for download on PhysioNet for all datasets, although a substantial proportion of participants are missing ECG or tabular data.
 
