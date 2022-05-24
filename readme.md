@@ -1,6 +1,6 @@
 ---
-title: "Data processing workflow in R"
-author: "Group 2 Data Science Spring School 2022"
+title: "Project Description and Data Processing Workflow"
+author: "Group 2 Data Science Spring School 2022 (Anders Isaksen, Hugo Fitipaldi, Sam Ghatan, Sedrah Butt)"
 output:
   html_document:
     toc: true
@@ -15,7 +15,7 @@ This is the repository for ~~Group *Anders*~~ **Group 2** of the Data Science Sp
 ![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/quizwinners.jpg?raw=true)
 
 Update: and **BEST CHALLENGE AWARD WINNERS!**!
-![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/winners.jpg?raw=true)
+![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/happyfaces.jpg?raw=true)
 
 This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG_DDA/index.html).
 
