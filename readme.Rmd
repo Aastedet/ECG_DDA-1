@@ -1,6 +1,6 @@
 ---
-title: "Data processing workflow in R"
-author: "Group 2 Data Science Spring School 2022"
+title: "Project Description and Data Processing Workflow"
+author: "Group 2 Data Science Spring School 2022 (Anders Isaksen, Hugo Fitipaldi, Sam Ghatan, Sedrah Butt)"
 output:
   html_document:
     toc: true
@@ -17,6 +17,9 @@ knitr::opts_chunk$set(echo = TRUE)
 This is the repository for ~~Group *Anders*~~ **Group 2** of the Data Science Spring School & Challenge, notorious Kahoot quiz winners!
 ![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/quizwinners.jpg?raw=true)
 
+Update: and **BEST CHALLENGE AWARD WINNERS!**!
+![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/happyfaces.jpg?raw=true)
+
 This document is best viewed on [GitHub Pages](https://pandapowell.github.io/ECG_DDA/index.html).
 
 This project is fully open-source from raw data to output and presentation, so please join and help us improve the model. Sources are contained in the [GitHub repository](https://github.com/PandaPowell/ECG_DDA).
@@ -29,14 +32,19 @@ Throughout this document, *R* code to reproduce data processing and population f
 
 The final processing of ECG data and neural network training is performed using Python in a Google Colab Notebook [here](https://colab.research.google.com/drive/1yezNX6pxlHbcWRo08Zk5r23IShMEXZQN?usp=sharing) and [here](https://colab.research.google.com/drive/1_b-j3hDzYTYbbqGdyUnoaGiPZyRMbcJE?usp=sharing). The filtered ECG data output from the `readme.Rmd`  *R* script and used in the notebook can be found on [Google Drive](https://drive.google.com/drive/folders/17AX33KuzP2nZwCQ9sWErY_0bSGI-ON1R?usp=sharing) (or locally in `/ecg_data/` after running the `readme.Rmd` script).
 
+To generate/update the GitHub Pages landing page, run `index.R` after knitting `readme.Rmd`.
+
 # Aims and summary
 
-This project aimed to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
+ - This project aimed to train a neural network to be able to predict the risk of an individual having prevalent diabetic neuropathy, using nothing but a ~~standard 12-lead~~ 10 second ECG of two non-standard V1/V2 and V5/V6 leads.
+ - By combining four publicly available PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG records) is recorded during vasoregulatory stress testing experiments, and were deemed inappropriate for our use. Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
+ - Data augmentation was mainly done in the way of splitting the ECG signals into many images of 10-second snippets, in addition to item and batch transforming operations (random resizing and cropping, etc.). 
+ -We trained the same model on different training/validation splits to account for potential data leakage on the individual and experiment dataset level.
+ - A ResNet18 computer vision model was transferred and trained on these data, but model performance was poor, and very prone to over-fitting, with a validation loss > 0.80 and increasing with every epoch of training beyond the first. Validation loss was highest in the model with training/validation split on experiment dataset level, indicating that data leakage only this level is worth accounting for.
+- Further Work: Particularly challenging was the high level of noise in the ECG data. Had more time been available, the next step to improve model performance would be to filter out noisy ECG snippets.
 
-By combining four PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG data) is recorded during vasoregulatory stress testing (e.g. head tilt maneuvers) and was deemed inappropriate for use. Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
-
-Data augmentation was mainly done in the way of splitting the ECG signals into many images of 10-second snippets, in addition to transforming operations (random resizing and cropping, etc.). A ResNet18 computer vision model was transferred and trained on these data, but performance was poor, and very prone to over-fitting.
-Particularly challenging was the high level of noise in the ECG data, and data leakage on the individual and source dataset level. The latter was overcome by careful splitting into training and validation datasets, but the former was not addressed. More work to clean the ECG data may enable better performance.
+Poster presentation:
+![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/poster.png?raw=true)
 
 # Data sources
 
