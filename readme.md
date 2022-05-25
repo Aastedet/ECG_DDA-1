@@ -37,8 +37,8 @@ To generate/update the GitHub Pages landing page, run `index.R` after knitting `
  - By combining four publicly available PhysioNet datasets, data is available on a total of roughly 100 ECGs from 90 individuals with diabetes, who have provided data on neuropathy status. However, ECG data from two of these datasets (a third of the total ECG records) is recorded during vasoregulatory stress testing experiments, and were deemed inappropriate for our use. Thus, the final dataset consisted of 60 individuals with diabetes from two PhysioNet datasets, with 24 cases of prevalent diabetic neuropathy among these individuals.
  - Data augmentation was mainly done in the way of splitting the ECG signals into many images of 10-second snippets, in addition to item and batch transforming operations (random resizing and cropping, etc.). 
  -We trained the same model on different training/validation splits to account for potential data leakage on the individual and experiment dataset level.
- - A ResNet18 computer vision model was transferred and trained on these data, but model performance was poor, and very prone to over-fitting, with a validation loss > 0.80 and increasing with every epoch of training beyond the first. Validation loss was highest in the model with training/validation split on experiment dataset level, indicating that data leakage only this level is worth accounting for.
-- Further Work: Particularly challenging was the high level of noise in the ECG data. Had more time been available, the next step to improve model performance would be to filter out noisy ECG snippets.
+ - A ResNet18 computer vision model was transferred and trained on these data, but model performance was poor, and very prone to over-fitting, with a validation loss > 0.80 and increasing with every epoch of training beyond the first. Validation loss was highest in the model with training/validation split on experiment dataset level, indicating that data leakage only this level may be worth accounting for.
+- Further work: Particularly challenging was the high level of noise in the ECG data. Had more time been available, the next logical step to improve model performance would be to filter out noisy ECG snippets, or even better, train the model as a 3-label classifier (neuropathy, healthy, noise).
 
 Poster presentation:
 ![img](https://github.com/PandaPowell/ECG_DDA/blob/master/misc/poster.png?raw=true)
@@ -83,7 +83,14 @@ library(data.table)
 library(here)
 library(snakecase)
 library(stringr)
+library(fs)
+```
 
+```
+## Warning: package 'fs' was built under R version 4.1.3
+```
+
+```r
 # Load tabular data:
 
 # From "Cerebromicrovascular Disease in Elderly with Diabetes" ("GE-79"):
@@ -621,7 +628,7 @@ cded_healthy
 ```
 
 
-Since the proportion of neuropathy is balanced between the two datasets, we also train a model on a random 20/80 split for comparison (due to the balanced proportions, an increased performance after training on both datasets should not be due to data leakage):
+Since the proportion of neuropathy is balanced between the two datasets, we also train a model on a random 20/80 split for comparison (due to the balanced proportions, the risk of data leakage inflating performance when training the model across both datasets shouldn't be critical). 
 
 
 ```r
@@ -633,7 +640,8 @@ all_participant_files <- c(cded_healthy, cded_neuropathy, cpd_healthy, cpd_neuro
 all_healthy <- all_participant_files[str_sub(all_participant_files, -12, -5) %in% study_dataset[neuropathy_outcome == FALSE]$patient_id]
 
 all_neuropathy <- all_participant_files[str_sub(all_participant_files, -12, -5) %in% study_dataset[neuropathy_outcome == TRUE]$patient_id]
-# Set seed for reproducibility:
+
+# Set group 2 seed for reproducibility:
 
 set.seed(2)
 
@@ -662,9 +670,22 @@ For labeling purposes, training  set ECGs from individuals with neuropathy go to
 
 ```
 
+Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this.
+
+
 
 ```r
 # Copy these files to either /healthy/ or /neuropathy/ folders based on neuropathy status:
+
+# Create the folders
+ecg_folders <- c("ecg_wfdb", "ecg_wfdb_randomsplit")
+split_folders <- c(rep("train", 2), rep("valid", 2))
+label_folders <- c(rep("healthy", 4), rep("neuropathy", 4))
+
+path <- here(ecg_folders, split_folders, label_folders)
+
+dir_create(path)
+
 
 # Split by source dataset:
 
@@ -706,7 +727,6 @@ file.copy(from = valid_healthy, to = here("ecg_wfdb_randomsplit", "valid", "heal
 file.copy(from = valid_neuropathy, to = here("ecg_wfdb_randomsplit", "valid", "neuropathy"))
 ```
 
-Note that the ECG data files aren't tracked in Git, so you'll have to download the datasets from PhysioNet to reproduce this.
 
 # Off to Python and Google Colab!
 
